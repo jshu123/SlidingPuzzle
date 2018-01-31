@@ -102,8 +102,10 @@ public class NumberMode extends AppCompatActivity implements NumberModeView.IBoa
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        m_Timer.cancel();
-        m_AI_Bot.Solved(0);
+        if(m_Timer!=null)
+            m_Timer.cancel();
+        if(m_AI_Bot != null)
+            m_AI_Bot.Solved(0);
     }
 
     private void complete()
