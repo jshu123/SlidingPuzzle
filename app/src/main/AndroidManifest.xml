@@ -16,7 +16,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".NumberMode" />
+        <activity android:name=".NumberModeMenu" />
         <activity android:name=".MathModeStart" />
         <activity android:name=".MathSingePlayer" />
         <activity android:name=".MathDoublePlayer" />
@@ -24,8 +24,7 @@
         <activity android:name=".MathDoubleCuthoroat" />
         <activity android:name=".ModeActivity" />
         <activity android:name=".MathNewPlayer" />
-        <activity android:name=".NumberAloneMode" />
-        <activity android:name=".NumberAIMode" />
+        <activity android:name=".NumberMode" />
         <activity android:name=".MathPlayerName"></activity>
     </application>
 
