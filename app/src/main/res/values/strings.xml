@@ -7,4 +7,11 @@
     <string name="number_mode">Number Mode</string>
     <string name="cutthroat">Cutthroat</string>
     <string name="two_player">Two Player</string>
+    <string name="new_player">New Player</string>
+    <string name="name">Name</string>
+    <string name="username">Username</string>
+    <string name="enter_name">Please enter player\'s name</string>
+    <string name="start">Start</string>
+    <string name="basic_mode">Basic Mode</string>
+    <string name="cutthroat_mode">Cutthroat Mode</string>
 </resources>
