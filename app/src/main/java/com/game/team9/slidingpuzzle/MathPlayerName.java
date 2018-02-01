@@ -12,14 +12,13 @@ public class MathPlayerName extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_math_player_name);
-        Button button_mathstart = (Button)findViewById(R.id.mathstart);
-        button_mathstart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent_math_player_name = new Intent(MathPlayerName.this, MathModeStart.class);
-                startActivity(intent_math_player_name);
-            }
-        });
+    }
+
+
+    public void onStartClicked(View view)
+    {
+        Intent intent = new Intent(MathPlayerName.this, MathModeStart.class);
+        startActivity(intent);
     }
 
 

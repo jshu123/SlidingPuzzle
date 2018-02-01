@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
         numberButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               Intent x = new Intent(MainActivity.this, NumberMode.class);
+               Intent x = new Intent(MainActivity.this, NumberModeMenu.class);
                 startActivity(x);
             }
             });

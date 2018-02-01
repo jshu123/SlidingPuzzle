@@ -4,21 +4,31 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.game.team9.slidingpuzzle.NumberMode">
+    tools:context="com.game.team9.slidingpuzzle.NumberModeMenu">
 
     <Button
         android:id="@+id/alone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Play Alone"
-        tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="95dp" />
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="52dp"
+        android:text="@string/single_player"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/againstai"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Against AI"
-        tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="197dp" />
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/against_cpu"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/alone" />
 </android.support.constraint.ConstraintLayout>
