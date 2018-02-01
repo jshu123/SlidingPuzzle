@@ -16,7 +16,10 @@ public class MathModeStart extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_math);
-
+        Intent intent  = getIntent();
+        String name = intent.getStringExtra("New Player");
+        if(name.isEmpty())
+            name = intent.getStringExtra("Old Player");
 
         singleButton = (Button) findViewById(R.id.single);
         doubleButton = (Button) findViewById(R.id.twoplayer);

@@ -11,20 +11,13 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class NumberMode extends AppCompatActivity implements NumberModeView.IBoardSolvedListener {
+public class NumberMode extends BaseGameMode implements NumberModeView.IBoardSolvedListener {
 
-    private static final Random s_Random = new Random();
-
-
-
-    private final Timer m_Timer = new Timer();
-    private int m_Time = 0;
     private NumberModeView m_Player;
     private NumberModeView m_AI;
 
     private NumberModeAI m_AI_Bot;
 
-    private TextView m_TimeView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,15 +46,16 @@ public class NumberMode extends AppCompatActivity implements NumberModeView.IBoa
             m_AI = findViewById(R.id.aiView);
             m_AI_Bot = new NumberModeAI(m_AI);
             m_AI.Initialize(tiles, true);
-            m_AI.AttachSolvedListener(this);
+            m_AI.AttachSolveListener(this);
         }
         else
             setContentView(R.layout.activity_number_alone_mode);
 
         m_Player = findViewById(R.id.playerView);
         m_Player.Initialize(tiles);
-        m_Player.AttachSolvedListener(this);
-        m_TimeView = findViewById(R.id.timerView);
+        m_Player.AttachSolveListener(this);
+        startTimer((TextView)findViewById(R.id.timerText));
+     /*   m_TimeView = findViewById(R.id.timerView);
 
         //start timer
         m_Timer.scheduleAtFixedRate(new TimerTask() {
@@ -76,7 +70,7 @@ public class NumberMode extends AppCompatActivity implements NumberModeView.IBoa
                     }
                 });
             }
-        },1000,1000);
+        },1000,1000);*/
     }
 
 
@@ -102,7 +96,7 @@ public class NumberMode extends AppCompatActivity implements NumberModeView.IBoa
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        m_Timer.cancel();
+        if(m_AI_Bot != null)
         m_AI_Bot.Solved(0);
     }
 

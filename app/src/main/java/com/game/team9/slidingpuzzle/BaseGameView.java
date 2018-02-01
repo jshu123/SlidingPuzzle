@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,7 +28,10 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private static final Paint m_BlankCol= new Paint();
     private final Paint m_Forground= new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    private static final boolean m_Debug = true;
+    private final int[] m_Swipe = new int[5];
+    private int m_SwipeIndex = 0;
+
+    protected static final boolean m_Debug = true;
 
 
     private final AtomicInteger m_Init = new AtomicInteger(0);
@@ -49,6 +53,8 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private float m_LastClickx;//Debug use only
     private float m_LastClicky;//Debug use only
 
+    private int m_LastIndex = -1;
+
     static{
         m_Background.setColor(0x929393);
         m_Grid.setStrokeWidth(10);
@@ -60,7 +66,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
         m_Forground.setColor(0xff0000ff);
         m_Forground.setStyle(Paint.Style.FILL);
-
+        Arrays.fill(m_Swipe, -1);
         ViewTreeObserver ob = getViewTreeObserver();
         ob.addOnGlobalLayoutListener(this);
     }
@@ -98,60 +104,121 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     protected abstract String boardToText(int value);
 
 
+    /**
+     * Override this to get swipe events.
+     * @param indexes, always in groups of 5.
+     */
+    protected void onSwipeEvent(int[] indexes)
+    {
+
+    }
+
     public float getTileWidth(){return m_TileWidth;}
     public float getTileHeight(){return m_TileHeight;}
     public int getBlank(){return m_Blank;}
     public int[] getTiles(){return m_Tiles.clone();}
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if((!m_LockedforCPU && event.getAction() != MotionEvent.ACTION_DOWN) || (m_LockedforCPU && event.getAction() !=       MotionEvent.ACTION_POINTER_ID_MASK))
-            return super.onTouchEvent(event);
-        if(m_Debug) {
-            m_LastClickx = event.getX();
-            m_LastClicky = event.getY();
+    public final boolean onTouchEvent(MotionEvent event) {
+        switch(event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN:
+                m_LastClickx = event.getX();
+                m_LastClicky = event.getY();
+                Reset();
+                m_LastIndex = coordsToIndex(m_LastClickx, m_LastClicky);
+                m_Swipe[m_SwipeIndex++] = m_LastIndex;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if(m_SwipeIndex < 5) {
+                    m_LastClickx = event.getX();
+                    m_LastClicky = event.getY();
+                    int idx = coordsToIndex(m_LastClickx, m_LastClicky);
+                    if (idx != m_LastIndex) {
+                        m_LastIndex = idx;
+                        m_Swipe[m_SwipeIndex++] = m_LastIndex;
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                if(m_SwipeIndex == 1)
+                {
+                    int idx = coordsToIndex(event.getX(), event.getY());
+                    if(m_LastIndex == idx)
+                    {
+                        ChangeBlank();
+                    }
+                    Reset();
+                }
+                else
+                {
+                    onSwipeEvent(m_Swipe);
+                    Reset();
+                }
+                break;
+            case MotionEvent.ACTION_POINTER_ID_MASK:
+                if(m_LockedforCPU)
+                {
+                    m_LastClickx = event.getX();
+                    m_LastClicky = event.getY();
+                    m_LastIndex = coordsToIndex(m_LastClickx, m_LastClicky);
+                    ChangeBlank();
+                    Reset();
+                }
+                else
+                    return super.onTouchEvent(event);
+                break;
+
         }
-        int idx = coordsToIndex(event.getX(), event.getY());
+        return true;
+    }
+
+    private void ChangeBlank()
+    {
         synchronized (m_Lock) {
             if(m_Debug)
-                Log.d("MOVE", "Received as Index: " + idx + " @ " + m_LastClickx + ", " + m_LastClicky);
-            if(idx >= 0 && idx < 25 && m_Tiles[idx] != 0 && canSlide(idx))
+                Log.d("MOVE", "Received as Index: " + m_LastIndex + " @ " + m_LastClickx + ", " + m_LastClicky);
+            if(m_LastIndex >= 0 && m_LastIndex < 25 && m_Tiles[m_LastIndex] != BLANK_VALUE && canSlide(m_LastIndex))
             {
                 if(m_Debug)
                     Log.d("MOVE", "Valid!");
 
-                m_Tiles[m_Blank]= m_Tiles[idx];
-                m_Tiles[idx] = BLANK_VALUE;
-                m_Blank = idx;
+                m_Tiles[m_Blank]= m_Tiles[m_LastIndex];
+                m_Tiles[m_LastIndex] = BLANK_VALUE;
+                m_Blank = m_LastIndex;
 
                 if(m_Debug) {
                     Log.i("BLANK", "Blank: " + m_Blank);
                     Log.i("BLANK", android.os.Process.myTid() + ", " + android.os.Process.myPid());
                 }
                 invalidate();
-                for (IBoardChangeListener b : m_Listeners) {
-                        b.Changed(true);
-                }
+
             }
             else
             {
 
                 if(m_Debug) {
-                    Log.w("INVALID CLICK", "Index: " + idx);
+                    Log.w("INVALID CLICK", "Index: " + m_LastIndex);
                     invalidate();
                 }
                 for (IBoardChangeListener b : m_Listeners) {
-                        b.Changed(false);
+                    b.Changed(false);
                 }
             }
         }
-        return true;
     }
 
 
+    private void Reset()
+    {
+        m_SwipeIndex = 0;
+        Arrays.fill(m_Swipe, -1);
+        m_LastIndex = -1;
+    }
+
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected final void onDraw(Canvas canvas) {
         if (m_Blank < 0) {
             super.onDraw(canvas);
             return;
@@ -178,6 +245,9 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
         if(m_Debug)
        canvas.drawCircle(m_LastClickx, m_LastClicky, 10.0f, m_Forground);
+        for (IBoardChangeListener b : m_Listeners) {
+            b.Changed(true);
+        }
 
     }
 
@@ -185,7 +255,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
      * Use this to receive updates anytime the board changes
      * @param b
      */
-    public void AttachListener(IBoardChangeListener b)
+    public void AttachChangeListener(IBoardChangeListener b)
     {
         m_Listeners.add(b);
     }
@@ -244,7 +314,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     }
 
-    private int coordsToIndex(float x, float y)
+    protected int coordsToIndex(float x, float y)
     {
         int ix = (int)(x / m_TileWidth);
         int iy = (int)(y / m_TileHeight);

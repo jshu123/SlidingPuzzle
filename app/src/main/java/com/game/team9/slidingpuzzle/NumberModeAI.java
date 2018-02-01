@@ -1,7 +1,6 @@
 package com.game.team9.slidingpuzzle;
 
 import android.os.SystemClock;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
@@ -59,9 +58,9 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
     public NumberModeAI(NumberModeView ai)
     {
         m_Game = ai;
-        m_Game.AttachSolvedListener(this);
-        m_Game.AttachListener(this);
+        m_Game.AttachChangeListener(this);
         m_Game.AttachStartListener(this);
+        m_Game.AttachSolveListener(this);
     }
 
     @Override

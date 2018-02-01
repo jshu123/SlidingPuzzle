@@ -2,6 +2,8 @@ package com.game.team9.slidingpuzzle;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,7 @@ public class NumberModeView extends BaseGameView implements BaseGameView.IBoardC
         super(context, attrs);
     }
 
-    public void AttachSolvedListener(IBoardSolvedListener b)
+    public void AttachSolveListener(IBoardSolvedListener b)
     {
         if(!m_OnSolved.contains(b))
             m_OnSolved.add(b);

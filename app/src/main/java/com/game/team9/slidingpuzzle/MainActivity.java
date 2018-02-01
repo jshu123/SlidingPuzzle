@@ -13,8 +13,6 @@ public class MainActivity extends AppCompatActivity {
     private Button numberButton;
     private Button mathButton;
 
-    private TextView PlayerName;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,5 +35,11 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(y);
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        HighScoreDatabase.DestroyInstance();
     }
 }
