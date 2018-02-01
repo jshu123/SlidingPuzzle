@@ -9,21 +9,16 @@
     <TextView
         android:id="@+id/textView_timer"
         android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:layout_marginStart="36dp"
         android:layout_weight="1"
         android:background="@android:color/holo_blue_light"
         android:gravity="center"
         android:text="10:00"
         android:textSize="22dp"
         app:layout_constraintBottom_toTopOf="@+id/imageView"
-        app:layout_constraintEnd_toStartOf="@+id/textView_myname"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.346" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/button_highscore"
@@ -148,6 +143,23 @@
         app:layout_constraintEnd_toStartOf="@+id/button_highscore"
         app:layout_constraintHorizontal_bias="0.562"
         app:layout_constraintStart_toEndOf="@+id/textView_myname"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView_round"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Round"
+        android:textSize="20dp"
+        android:textColor="@android:color/black"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@+id/textView_timer"
+        app:layout_constraintEnd_toStartOf="@+id/textView_myname"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
