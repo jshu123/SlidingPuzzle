@@ -32,4 +32,13 @@ public class MathPlayerName extends AppCompatActivity {
         intent.putExtra("New User", a.getText().toString());
         startActivity(intent);
     }
+
+
+    public void onStartClicked(View view)
+    {
+        Intent intent = new Intent(MathPlayerName.this, MathModeStart.class);
+        startActivity(intent);
+    }
+
+
 }

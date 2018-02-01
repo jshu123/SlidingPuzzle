@@ -97,7 +97,8 @@ public class NumberMode extends BaseGameMode implements NumberModeView.IBoardSol
     protected void onDestroy() {
         super.onDestroy();
         if(m_AI_Bot != null)
-        m_AI_Bot.Solved(0);
+        if(m_AI_Bot != null)
+            m_AI_Bot.Solved(0);
     }
 
     private void complete()

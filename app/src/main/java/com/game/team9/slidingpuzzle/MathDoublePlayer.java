@@ -16,8 +16,8 @@ public class MathDoublePlayer extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_double_player);
 
-        basicButton = (Button) findViewById(R.id.basic);
-        cutthroatButton = (Button) findViewById(R.id.cutthroat);
+        basicButton = (Button) findViewById(R.id.button_basic);
+        cutthroatButton = (Button) findViewById(R.id.button_cutthroat);
 
         basicButton.setOnClickListener(new View.OnClickListener() {
             @Override
