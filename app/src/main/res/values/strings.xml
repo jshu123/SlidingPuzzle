@@ -5,6 +5,9 @@
     <string name="against_cpu">Against CPU</string>
     <string name="math_mode">Math Mode</string>
     <string name="number_mode">Number Mode</string>
-    <string name="cutthroat">Cutthroat</string>
+    <string name="cutthroat">Cutthroat Mode</string>
     <string name="two_player">Two Player</string>
+    <string name="basicr">Basic Mode</string>
+    <string name="highscore">High Score</string>
+    <string name="welcome_two_player">Welcome to Two Player Mode</string>
 </resources>

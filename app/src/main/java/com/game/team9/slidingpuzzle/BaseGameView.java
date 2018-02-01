@@ -27,7 +27,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private static final Paint m_BlankCol= new Paint();
     private final Paint m_Forground= new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    private static final boolean m_Debug = true;
+    private static final boolean m_Debug = false;
 
 
     private final AtomicInteger m_Init = new AtomicInteger(0);

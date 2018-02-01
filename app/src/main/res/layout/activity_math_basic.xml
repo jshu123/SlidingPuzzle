@@ -33,7 +33,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginTop="8dp"
         android:layout_weight="1"
-        android:text="High Score"
+        android:text="@string/highscore"
         android:textAllCaps="false"
         app:layout_constraintBottom_toTopOf="@+id/imageView"
         app:layout_constraintEnd_toEndOf="parent"
