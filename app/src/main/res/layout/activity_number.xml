@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.game.team9.slidingpuzzle.NumberModeMenu">
+    tools:context="com.game.team9.slidingpuzzle.NumberModeMenuActivity">
 
     <Button
         android:id="@+id/alone"

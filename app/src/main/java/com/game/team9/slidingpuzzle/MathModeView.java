@@ -2,11 +2,10 @@ package com.game.team9.slidingpuzzle;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -19,7 +18,6 @@ public class MathModeView extends BaseGameView {
     private final Set<Equation> m_Hist = new HashSet<>();
 
     private final Set<IScored> m_OnScored = new HashSet<>();
-
     public MathModeView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -29,7 +27,6 @@ public class MathModeView extends BaseGameView {
     {
         m_OnScored.add(s);
     }
-
 
     @Override
     protected void onSwipeEvent(int[] indexes) {
@@ -179,7 +176,7 @@ public class MathModeView extends BaseGameView {
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
@@ -187,9 +184,7 @@ public class MathModeView extends BaseGameView {
 
             if(!valid && !equation.valid)
                 return true;
-            if(value == equation.value || value == equation.reverse)
-                return true;
-            return false;
+            return value == equation.value || value == equation.reverse;
         }
 
         @Override
@@ -214,7 +209,7 @@ public class MathModeView extends BaseGameView {
         Right(2),
         Down(3);
 
-        private Direction(int v){value = v;}
+        Direction(int v){value = v;}
 
         private final int value;
 

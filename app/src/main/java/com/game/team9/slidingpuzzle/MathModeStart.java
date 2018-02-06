@@ -21,13 +21,13 @@ public class MathModeStart extends AppCompatActivity {
         if(name.isEmpty())
             name = intent.getStringExtra("Old Player");
 
-        singleButton = (Button) findViewById(R.id.single);
-        doubleButton = (Button) findViewById(R.id.twoplayer);
+        singleButton = findViewById(R.id.single);
+        doubleButton = findViewById(R.id.twoplayer);
 
         singleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent x = new Intent(MathModeStart.this, MathSingePlayer.class);
+                Intent x = new Intent(MathModeStart.this, MathSinglePlayerActivity.class);
                 startActivity(x);
             }
         });

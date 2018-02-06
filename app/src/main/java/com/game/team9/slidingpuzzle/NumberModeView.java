@@ -1,9 +1,8 @@
 package com.game.team9.slidingpuzzle;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.MotionEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +44,7 @@ public class NumberModeView extends BaseGameView implements BaseGameView.IBoardC
         }
     }
 
-    public static boolean checkSolved(int env[])
+    public static boolean checkSolved(@NonNull int env[])
     {
         if(env[env.length - 1] != 0)
             return false;

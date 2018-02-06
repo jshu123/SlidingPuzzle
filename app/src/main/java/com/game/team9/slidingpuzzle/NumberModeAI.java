@@ -1,6 +1,8 @@
 package com.game.team9.slidingpuzzle;
 
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
@@ -19,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by x on 1/30/18.
  */
 
-public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSolvedListener, BaseGameView.IGameStart {
+public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSolvedListener, Runnable {
 
     private static final boolean m_Debug = true;
 
@@ -32,11 +34,13 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
 
     private boolean m_Stop = false;
     private final AtomicBoolean m_Lock = new AtomicBoolean(false);
+    @NonNull
     private ThreadStatus m_Status = ThreadStatus.NA;
 
     private final Thread m_SearchThread = new Thread(new Runnable() {
         @Override
         public void run() {
+            Thread.currentThread().setName("AI Searcher");
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
             SearchThread();
         }
@@ -44,6 +48,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
     private final Thread m_MoveThread = new Thread(new Runnable() {
         @Override
         public void run() {
+            Thread.currentThread().setName("AI Mover");
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
             if(m_BoringAI)
                 BoringAIThread();
@@ -59,7 +64,6 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
     {
         m_Game = ai;
         m_Game.AttachChangeListener(this);
-        m_Game.AttachStartListener(this);
         m_Game.AttachSolveListener(this);
     }
 
@@ -95,7 +99,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             }
         }
         synchronized (m_Lock) {
-            while (!m_Lock.compareAndSet(true, false))
+            if (!m_Lock.compareAndSet(true, false))
                 m_Lock.notify();
         }
         if(m_Debug)
@@ -103,12 +107,14 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
     }
 
     @Override
-    public void OnStart() {
-        if(!m_BoringAI)
+    public void run() {
+        if(!m_BoringAI) {
             m_SearchThread.start();
-        m_MoveThread.start();
+            m_MoveThread.start();
+        }
+        else
+            BoringAIThread();
     }
-
 
     private void BoringAIThread()
     {
@@ -147,23 +153,25 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
                     0);
             // Assert.assertTrue(m_Game.canSlide(i.intValue()));
             synchronized (m_Lock) {
-                while (!m_Lock.compareAndSet(false, true))
+                while (!m_Stop && !m_Lock.compareAndSet(false, true))
                     try {
                         m_Status = ThreadStatus.WAITING;
                         if(m_Debug)
                         Log.d("CHANGE", "WAITING");
-                        m_Lock.wait();
+                        m_Lock.wait(400+rand.nextInt(150));
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     } finally {
                         m_Status = ThreadStatus.RUNNING;
                     }
+                    if(m_Stop)
+                        break;
                 if(m_Debug)
                     Log.d("CHANGE", "ADDED");
                 m_Game.dispatchTouchEvent(event);
             }
             try {
-                Thread.sleep(500);
+                Thread.sleep(400+rand.nextInt(150));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -284,7 +292,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             Log.i("AI Thread Started", "ID: " + android.os.Process.myTid());
         TreeSet<state> tree = new TreeSet<>(new Comparator<state>() {
             @Override
-            public int compare(state s, state t1) {
+            public int compare(@NonNull state s, @NonNull state t1) {
                 return s.getFitness() - t1.getFitness();
             }
         });
@@ -329,6 +337,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
 
     private class state
     {
+        @NonNull
         public final Direction dir;
         public final int from;
         public final int to;
@@ -338,6 +347,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
         public final int h;
         private final boolean[] m_Conflicts = new boolean[25];
 
+        @Nullable
         public state parent;
 
         private boolean m_Opened = false;
@@ -345,33 +355,30 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
 
         public final TreeSet<state> Successors = new TreeSet<>(new Comparator<state>() {
             @Override
-            public int compare(state s, state t1) {
+            public int compare(@NonNull state s, @NonNull state t1) {
                 return s.getFitness() - t1.getFitness();
             }
         });
 
-        public state(int e[])
+        public state(@NonNull int e[])
         {
             dir = Direction.ROOT;
             to = v = -1;
             g = 0;
-            for(int i = 0; i < e.length; ++i)
-                env[i] = e[i];
+            System.arraycopy(e, 0, env, 0, e.length);
             h = heuristic();
             from = BaseGameView.findBlank(env);
             //touched = opened = added = false;
             parent = null;
         }
 
-        public state(int f, int t, int[] e, int gg)
+        public state(int f, int t, @NonNull int[] e, int gg)
         {
             to = t;
             from = f;
             v = e[f];
             g=gg;
-            for (int i = 0; i < e.length; i++) {
-                env[i] = e[i];
-            }
+            System.arraycopy(e, 0, env, 0, e.length);
             env[f] = e[t];
             env[t] = v;
             //opened = true;
@@ -409,7 +416,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             return closed;
         }
 
-        public boolean checkMatches(state last)
+        public boolean checkMatches(@Nullable state last)
         {
             if(last == null)
                 return false;
@@ -417,7 +424,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
         }
 
 
-        public boolean checkPath(state b)
+        public boolean checkPath(@NonNull state b)
         {
             state c = this;
             while(c != null)
@@ -429,7 +436,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             return false;
         }
 
-        public boolean match(int[] a)
+        public boolean match(@NonNull int[] a)
         {
             boolean ret = true;
             for(int i = 0; i < a.length; ++i)
@@ -523,7 +530,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
                 }
                 dx = i % 5;
                 dy = (i == 0 ? 0 : i / 5);
-                h1+= (int)Math.abs(x - dx) + Math.abs(y - dy);
+                h1+= Math.abs(x - dx) + Math.abs(y - dy);
             }
             return h1;
         }
@@ -626,7 +633,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
         Right(2),
         Down(3);
 
-        private Direction(int v){value = v;}
+        Direction(int v){value = v;}
 
         private final int value;
 

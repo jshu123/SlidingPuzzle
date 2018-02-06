@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-public class NumberModeMenu extends AppCompatActivity {
+public class NumberModeMenuActivity extends AppCompatActivity {
 
 
     private Button aloneButton;
@@ -17,20 +17,20 @@ public class NumberModeMenu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_number);
 
-        aloneButton = (Button) findViewById(R.id.alone);
-        againstaiButton = (Button) findViewById(R.id.againstai);
+        aloneButton = findViewById(R.id.alone);
+        againstaiButton = findViewById(R.id.againstai);
 
         aloneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent x = new Intent(NumberModeMenu.this, NumberMode.class);
+                Intent x = new Intent(NumberModeMenuActivity.this, NumberModeActivity.class);
                 startActivity(x);
             }
         });
         againstaiButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent y = new Intent(NumberModeMenu.this, NumberMode.class);
+                Intent y = new Intent(NumberModeMenuActivity.this, NumberModeActivity.class);
                 y.putExtra("AI",true);
                 startActivity(y);
             }

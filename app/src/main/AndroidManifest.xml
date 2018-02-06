@@ -2,13 +2,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.game.team9.slidingpuzzle">
 
+    <uses-permission
+        android:name="android.permission.ACCESS_COARSE_LOCATION"
+        android:required="false" />
+    <uses-permission
+        android:name="android.permission.ACCESS_WIFI_STATE"
+        android:required="false" />
+    <uses-permission
+        android:name="android.permission.CHANGE_WIFI_STATE"
+        android:required="false" />
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        android:required="false" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:fullBackupContent="@xml/backup_descriptor">
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -16,30 +32,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".NumberModeMenu" />
+        <activity android:name=".NumberModeMenuActivity" />
         <activity android:name=".MathModeStart" />
-        <activity android:name=".MathSingePlayer" />
+        <activity android:name=".MathSinglePlayerActivity" />
         <activity android:name=".MathDoublePlayer" />
-        <activity android:name=".MathDoubleBasic" />
-        <activity android:name=".MathDoubleCuthoroat" />
-        <activity android:name=".ModeActivity" />
-        <activity android:name=".MathNewPlayer" />
-        <activity android:name=".NumberMode" />
-        <activity android:name=".MathPlayerName" />
-        <activity android:name=".HighScoreActivity"></activity>
+        <activity android:name=".MathDoubleBasicActivity" />
+        <activity android:name=".MathDoubleCuthroatActivity" />
+        <activity android:name=".NumberModeActivity" />
+        <activity android:name=".MathNameActivity" />
+        <activity android:name=".MathOnlineDiscoveryActivity" />
 
+        <service
+            android:name=".network.wifi.WifiP2PService"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".network.bluetooth.BluetoothService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
-    <uses-permission
-        android:required="true"
-        android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission
-        android:required="true"
-        android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission
-        android:required="true"
-        android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission
-        android:required="true"
-        android:name="android.permission.INTERNET"/>
 
 </manifest>

@@ -2,21 +2,22 @@ package com.game.team9.slidingpuzzle;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.Chronometer;
 
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
 
-public class NumberMode extends BaseGameMode implements NumberModeView.IBoardSolvedListener {
+public class NumberModeActivity extends AppCompatActivity implements NumberModeView.IBoardSolvedListener {
 
     private NumberModeView m_Player;
     private NumberModeView m_AI;
 
     private NumberModeAI m_AI_Bot;
+    private Chronometer m_Timer;
 
 
     @Override
@@ -24,14 +25,14 @@ public class NumberMode extends BaseGameMode implements NumberModeView.IBoardSol
         super.onCreate(savedInstanceState);
 
 
-
+        Random r = new Random();
 
         int tiles[] = new int[25];
 
         //Create new puzzle with random numbers
         do {
             for (int i = 0, swap = 0; i < 25; ++i) {
-                int rand = s_Random.nextInt(swap + 1);
+                int rand = r.nextInt(swap + 1);
                 if (rand != swap)
                     tiles[swap] = tiles[rand];
                 tiles[rand] = i;
@@ -45,6 +46,12 @@ public class NumberMode extends BaseGameMode implements NumberModeView.IBoardSol
             setContentView(R.layout.activity_number_aimode);
             m_AI = findViewById(R.id.aiView);
             m_AI_Bot = new NumberModeAI(m_AI);
+            m_AI.AttachStartListener(new BaseGameView.IGameStart() {
+                @Override
+                public void OnStart() {
+                    Executors.defaultThreadFactory().newThread(m_AI_Bot).start();
+                }
+            });
             m_AI.Initialize(tiles, true);
             m_AI.AttachSolveListener(this);
         }
@@ -54,23 +61,8 @@ public class NumberMode extends BaseGameMode implements NumberModeView.IBoardSol
         m_Player = findViewById(R.id.playerView);
         m_Player.Initialize(tiles);
         m_Player.AttachSolveListener(this);
-        startTimer((TextView)findViewById(R.id.timerText));
-     /*   m_TimeView = findViewById(R.id.timerView);
-
-        //start timer
-        m_Timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ++m_Time;
-                        String text = String.valueOf((int)Math.floor(m_Time / 60))+":"+String.valueOf(m_Time % 60);
-                        m_TimeView.setText(text);
-                    }
-                });
-            }
-        },1000,1000);*/
+        m_Timer =findViewById(R.id.chronometer);
+        m_Timer.start();
     }
 
 
@@ -80,12 +72,12 @@ public class NumberMode extends BaseGameMode implements NumberModeView.IBoardSol
        // if(m_AI != null)
          //   m_AI.Stop();
         String msg = id == m_Player.getId() ? "You win!" : "You lose.";
-        AlertDialog alertDialog = new AlertDialog.Builder(NumberMode.this).create();
+        AlertDialog alertDialog = new AlertDialog.Builder(NumberModeActivity.this).create();
         alertDialog.setTitle("Game over");
         alertDialog.setMessage(msg);
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
                 new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
+                    public void onClick(@NonNull DialogInterface dialog, int which) {
                         dialog.dismiss();
                         complete();
                     }
@@ -97,8 +89,13 @@ public class NumberMode extends BaseGameMode implements NumberModeView.IBoardSol
     protected void onDestroy() {
         super.onDestroy();
         if(m_AI_Bot != null)
-        if(m_AI_Bot != null)
             m_AI_Bot.Solved(0);
+        if(m_AI != null)
+            m_AI.Destroy();
+        if(m_Player != null)
+            m_Player.Destroy();
+        if(m_Timer != null)
+            m_Timer.stop();
     }
 
     private void complete()

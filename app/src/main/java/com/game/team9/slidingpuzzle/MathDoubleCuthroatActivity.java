@@ -2,8 +2,6 @@ package com.game.team9.slidingpuzzle;
 
 import android.content.Context;
 import android.content.IntentFilter;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -11,24 +9,28 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
-import java.net.InetAddress;
+import com.game.team9.slidingpuzzle.network.wifi.PeerBroadcastReceiver;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class MathDoubleCuthoroat extends AppCompatActivity {
+public class MathDoubleCuthroatActivity extends AppCompatActivity {
 
 
     private final IntentFilter intentFilter = new IntentFilter();
     WifiP2pManager.Channel mChannel;
+    @Nullable
     WifiP2pManager mManager;
     PeerBroadcastReceiver receiver;
 
+    @NonNull
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +69,7 @@ public class MathDoubleCuthoroat extends AppCompatActivity {
 
         mManager.requestGroupInfo(mChannel, new WifiP2pManager.GroupInfoListener() {
             @Override
-            public void onGroupInfoAvailable(WifiP2pGroup group) {
+            public void onGroupInfoAvailable(@NonNull WifiP2pGroup group) {
                 String groupPassword = group.getPassphrase();
             }
         });
@@ -80,7 +82,7 @@ public class MathDoubleCuthoroat extends AppCompatActivity {
 
             @Override
             public void onFailure(int reason) {
-                Toast.makeText(MathDoubleCuthoroat.this, "P2P group creation failed. Retry.",
+                Toast.makeText(MathDoubleCuthroatActivity.this, "P2P group creation failed. Retry.",
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -88,7 +90,7 @@ public class MathDoubleCuthoroat extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        receiver = new PeerBroadcastReceiver(mManager, mChannel, this);
+        //receiver = new PeerBroadcastReceiver(mManager, mChannel, this);
         registerReceiver(receiver, intentFilter);
     }
 
@@ -97,9 +99,10 @@ public class MathDoubleCuthoroat extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(receiver);
     }
+    @NonNull
     private WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
         @Override
-        public void onPeersAvailable(WifiP2pDeviceList peerList) {
+        public void onPeersAvailable(@NonNull WifiP2pDeviceList peerList) {
 
             Collection<WifiP2pDevice> refreshedPeers = peerList.getDeviceList();
             if (!refreshedPeers.equals(peers)) {
@@ -139,13 +142,13 @@ public class MathDoubleCuthoroat extends AppCompatActivity {
 
             @Override
             public void onFailure(int reason) {
-                Toast.makeText(MathDoubleCuthoroat.this, "Connect failed. Retry.",
+                Toast.makeText(MathDoubleCuthroatActivity.this, "Connect failed. Retry.",
                         Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    public void onConnectionInfoAvailable(final WifiP2pInfo info) {
+    public void onConnectionInfoAvailable(@NonNull final WifiP2pInfo info) {
 
         // InetAddress from WifiP2pInfo struct.
         String groupOwnerAddress = info.groupOwnerAddress.getHostAddress();
