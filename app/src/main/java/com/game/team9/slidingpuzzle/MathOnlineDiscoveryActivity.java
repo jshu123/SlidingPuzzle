@@ -11,31 +11,35 @@ package com.game.team9.slidingpuzzle;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.widget.CompoundButton;
-import android.widget.Switch;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.game.team9.slidingpuzzle.network.MathClientActivity;
+import com.game.team9.slidingpuzzle.network.MathServerAcitivity;
 import com.game.team9.slidingpuzzle.network.bluetooth.Constants;
-import com.game.team9.slidingpuzzle.network.bluetooth.BluetoothService;
+import com.game.team9.slidingpuzzle.network.bluetooth.MathBluetoothActivity;
+import com.game.team9.slidingpuzzle.network.wifi.MathWifiActivity;
 import com.game.team9.slidingpuzzle.network.wifi.PeerBroadcastReceiver;
 
-public class MathOnlineDiscoveryActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener {
+import java.util.concurrent.Executors;
+
+public class MathOnlineDiscoveryActivity extends AppCompatActivity {
 
     private static PeerBroadcastReceiver s_Receiver;
     private static WifiP2pManager.Channel s_Channel;
@@ -43,7 +47,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements Co
 
     private static final Object m_Lock = new Object();
 
-    private static boolean m_Bound = false;
+    private static boolean m_Bound = false;/*
     @Nullable
     private static BluetoothService m_Service;
     @Nullable
@@ -56,7 +60,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements Co
             // service using a Messenger, so here we get a client-side
             // representation of that from the raw IBinder object.
             Log.i("SERVICE", "Connected");
-            // WifiP2PService serv = (WifiP2PService)iBinder;
+            // MathModeService serv = (MathModeService)iBinder;
             synchronized (m_Lock) {
                 if(!m_Bound) {
                     BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder)iBinder;
@@ -84,11 +88,11 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements Co
 
 
     private final BluetoothHandler m_Bhandle = new BluetoothHandler();
-
+*/
     private static final IntentFilter s_WFilter = new IntentFilter();
     private static final IntentFilter s_BFilter = new IntentFilter();
 
-    static{
+    static {
         s_WFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         s_WFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         s_WFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
@@ -105,64 +109,81 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements Co
 
     private boolean m_WifiEnabled;
     private boolean m_BlueEnabled;
+    private TextView m_Status;
+    private TextView m_BlueText;
+
+    private int m_Mode;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_math_online_discovery);
+        m_Status = findViewById(R.id.statusText);
+        Executors.defaultThreadFactory().newThread(() -> {
 
-        if(savedInstanceState == null)
-        {
+            setWifiStatus(s_Manager != null);
+        }).start();
+        Intent intent = getIntent();
+        m_Mode = intent.getIntExtra("MODE", -1);
+        WifiManager wifiMgr = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
+
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (BluetoothAdapter.getDefaultAdapter() == null) {
+            m_Status.setText("No bluetooth service available.  ");
+
+        } else
+            findViewById(R.id.blueButton).setEnabled(m_BlueEnabled = true);
+        if (!wifiMgr.isWifiEnabled())
+            m_WifiEnabled = wifiMgr.setWifiEnabled(true);
+        if (!mWifi.isAvailable()) {
+            m_Status.setText(m_Status.getText() + "No wireless service available!  ");
+        } else if (!wifiMgr.isP2pSupported()) {
+            m_Status.setText(m_Status.getText() + "Wifi P2P not supported!  ");
+        } else {
+            findViewById(R.id.wifiButton).setEnabled(m_WifiEnabled = true);
+            s_Manager = (WifiP2pManager) getSystemService(WIFI_P2P_SERVICE);
         }
-       // s_Manager = (WifiP2pManager)getSystemService(Context.WIFI_P2P_SERVICE);
-       // s_Channel = s_Manager.initialize(this, null, null);
-        //s_Receiver = new PeerBroadcastReceiver(s_Manager, s_Channel, this);
 
-        Switch net = findViewById(R.id.networkSwitch);
-        net.setOnCheckedChangeListener(this);
-        tryBluetooth();
+        if (s_Manager == null) {
+            m_Status.setText(m_Status.getText() + "  No p2p manager found!  ");
+            m_WifiEnabled = wifiMgr.setWifiEnabled(false);
+        } else
+            s_Channel = s_Manager.initialize(this, getMainLooper(), null);
     }
 
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        // Bind to the service
-        bindService(new Intent(this, BluetoothService.class), m_Conn,
-                Context.BIND_AUTO_CREATE);
+    public void Wifi_OnClick(View view) {
+        Intent intent = new Intent(MathOnlineDiscoveryActivity.this, MathWifiActivity.class);
+        intent.putExtra("MODE", m_Mode);
+        startActivity(intent);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // Unbind from the service
-        synchronized (m_Lock)
-        {
-            if(m_Bound)
-            {
-                unbindService(m_Conn);
-                m_Bound = false;
-            }
-        }
+    public void Blue_OnClick(View view) {
+        Intent intent = new Intent(MathOnlineDiscoveryActivity.this, MathBluetoothActivity.class);
+        intent.putExtra("MODE", m_Mode);
+        startActivity(intent);
     }
-
-    private void replaceFragment(android.support.v4.app.Fragment frag, int layout)
+    
+    private void setWifiStatus(boolean b)
     {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(layout, frag);
-        transaction.commit();
+        m_WifiEnabled = b;
     }
+
 
     public void onWifiStatusChanged(boolean b)
     {
-
+            Toast toast = new Toast(getApplicationContext());
+            toast.setText(b ? "Wifi enabled" : "Wifi disabled");
+            toast.setDuration(Toast.LENGTH_LONG);
+            toast.show();
     }
 
     private void tryBluetooth()
     {
         endWifi();
-        if(!m_Bound)
+    /*    if(!m_Bound)
         {
           //  m_Bound= true;
            // s_BlueMan.setHandler(m_Bhandle);
@@ -186,7 +207,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements Co
                     endBluetooth();
                     break;
             }
-        }
+        }*/
     }
 
     private void endBluetooth()
@@ -194,8 +215,8 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements Co
         if(m_Bound)
         {
             m_Bound = false;
-            unbindService(m_Conn);
-            m_Service.closeHandler();
+      //      unbindService(m_Conn);
+      //      m_Service.closeHandler();
         }
 
     }
@@ -203,38 +224,35 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements Co
     private void tryWifi()
     {
         endBluetooth();
+        Handler handler = new Handler(Looper.getMainLooper());
+        Context ctx = this;
+        s_Manager.discoverPeers(s_Channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ctx, "Peer discovery started", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ctx, "Peer discovery Failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+
     }
 
     private void endWifi()
     {
 
-    }
-
-    private static void checkWifi(@NonNull Context context)
-    {
-        WifiManager wifiMgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if(wifiMgr.isWifiEnabled())
-        {
-            if(wifiMgr.isP2pSupported())
-            {
-
-            }
-        }
-    }
-
-    @Override
-    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-
-        if(b)
-        {
-            tryBluetooth();
-            //replaceFragment(new BluetoothDeviceFragment(), R.id.fragmentNet);
-        }
-        else
-        {
-            tryWifi();
-            //replaceFragment(new DevListFragment(), R.id.fragmentNet);
-        }
     }
 
     @Override

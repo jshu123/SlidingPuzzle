@@ -9,78 +9,37 @@
 
 package com.game.team9.slidingpuzzle.network.wifi;
 
-import android.content.Context;
-import android.net.Uri;
-import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.game.team9.slidingpuzzle.R;
+import com.game.team9.slidingpuzzle.network.DeviceObject;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link DevDetailFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link DevDetailFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+
+
 public class DevDetailFragment extends Fragment implements WifiP2pManager.ConnectionInfoListener {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    @Nullable
-    private String mParam1;
-    @Nullable
-    private String mParam2;
     private View m_ContentView;
     private WifiP2pInfo m_Info;
-    private WifiP2pDevice m_Device;
+    private DeviceObject m_Device;
 
-    @Nullable
-    private OnFragmentInteractionListener mListener;
+    private Button m_Connect;
+    private Button m_Accept;
+    private Button m_Activate;
+    private Button m_FindDev;
+    private TextView m_Status;
+    private TextView m_DevInfo;
 
-    public DevDetailFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment DevDetailFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    @NonNull
-    public static DevDetailFragment newInstance(String param1, String param2) {
-        DevDetailFragment fragment = new DevDetailFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -88,67 +47,87 @@ public class DevDetailFragment extends Fragment implements WifiP2pManager.Connec
         // Inflate the layout for this fragment
         m_ContentView = inflater.inflate(R.layout.fragment_dev_detail, container, false);
 
-
+        m_Activate = m_ContentView.findViewById(R.id.activateButton);
+        m_Accept = m_ContentView.findViewById(R.id.acceptButton);
+        m_Connect = m_ContentView.findViewById(R.id.connectButton);
+        m_FindDev = m_ContentView.findViewById(R.id.findButton);
+        m_Status = m_ContentView.findViewById(R.id.statusText);
+        m_DevInfo = m_ContentView.findViewById(R.id.infoText);
 
         return  m_ContentView;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
     public void connectOnClick(View view)
     {
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = m_Device.Ip;
+        config.wps.setup = WpsInfo.PBC;
 
+        ((DevListFragment.IDeviceListener) getActivity()).connect(config);
     }
 
-    public void disconnectOnClick(View view)
+    public void findOnClick(View view)
+    {
+    }
+
+    public void acceptOnClick(View view)
+    {
+    }
+
+    public void activateOnClick(View view)
     {
 
     }
 
-    public void playOnClick(View view)
-    {
+    private void configButtons(){
 
+        boolean dev = m_Device != null;
+        boolean con = m_Info != null;
+
+        m_FindDev.setVisibility((!dev &&!con && wifiIsOn())? View.VISIBLE : View.GONE);
+        m_Activate.setVisibility((!wifiIsOn())? View.VISIBLE : View.GONE);
+
+        m_Connect.setVisibility((dev && !con)? View.VISIBLE : View.GONE);
+        m_Accept.setVisibility((dev && con) ? View.VISIBLE : View.GONE);
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+        m_Info = wifiP2pInfo;
+        m_DevInfo.setText(m_Info.groupOwnerAddress.getHostAddress());
+        if(wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner)
+        {
+            m_Accept.setVisibility(View.VISIBLE);
+            m_Connect.setVisibility(View.GONE);
+            m_Status.setText("You have been challeneged!");
+        }
+        else
+        {
+            m_Accept.setVisibility(View.GONE);
+            m_Connect.setVisibility(View.VISIBLE);
+            m_Status.setText("Invite player");
+        }
+    }
+
+    public void Reset()
+    {
+        m_Device= null;
+        m_Info = null;
+        m_Status.setText("");
+        m_DevInfo.setText("");
+        configButtons();
 
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    private boolean wifiIsOn() {
+        return ((MathWifiActivity) getActivity()).isWifiP2pEnabled();
+    }
+
+    public void devInfo(DeviceObject dev)
+    {
+        m_Device = dev;
+        m_DevInfo.setText(dev.toString());
+        configButtons();
     }
 }

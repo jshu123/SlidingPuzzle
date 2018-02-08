@@ -16,7 +16,7 @@
         android:background="@android:color/holo_blue_light"
         android:gravity="center"
         android:text="10:00"
-        android:textSize="22dp"
+        android:textSize="22sp"
         app:layout_constraintBottom_toTopOf="@+id/imageView"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -35,7 +35,6 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView_myscore"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -46,7 +45,7 @@
         android:background="@android:color/holo_green_light"
         android:gravity="center"
         android:text="Score"
-        android:textSize="22dp"
+        android:textSize="22sp"
         android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/imageView"
         app:layout_constraintEnd_toStartOf="@+id/textView_yourscore"
@@ -71,7 +70,6 @@
         app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
     <TextView
-        android:id="@+id/textView_turn"
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginBottom="8dp"
@@ -79,7 +77,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:text="Your Turn/Wait"
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:background="@android:color/holo_green_light"
         android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -112,7 +110,7 @@
 
         android:gravity="center"
         android:text="Score"
-        android:textSize="22dp"
+        android:textSize="22sp"
         app:layout_constraintBottom_toTopOf="@+id/imageView"
         app:layout_constraintEnd_toStartOf="@+id/highscoreButton"
         app:layout_constraintTop_toBottomOf="@+id/textView_yourname"
@@ -126,7 +124,7 @@
         android:layout_marginTop="16dp"
         android:text="Player1"
         android:textColor="@android:color/holo_red_dark"
-        android:textSize="20dp"
+        android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -139,14 +137,13 @@
         android:layout_marginTop="16dp"
         android:text="Player2"
         android:textColor="@android:color/holo_red_dark"
-        android:textSize="20dp"
+        android:textSize="20sp"
         app:layout_constraintEnd_toStartOf="@+id/highscoreButton"
         app:layout_constraintHorizontal_bias="0.562"
         app:layout_constraintStart_toEndOf="@+id/textView_myname"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView_round"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -154,7 +151,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:text="Round"
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:textColor="@android:color/black"
         android:gravity="center"
         app:layout_constraintBottom_toTopOf="@+id/timerText"

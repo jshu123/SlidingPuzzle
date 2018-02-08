@@ -31,7 +31,7 @@ public class MathDoubleCuthroatActivity extends AppCompatActivity {
     PeerBroadcastReceiver receiver;
 
     @NonNull
-    private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+    private List<WifiP2pDevice> peers = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

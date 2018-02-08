@@ -9,7 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by x on 1/30/18.
+ * Created on: 1/30/18
+ *     Author: David Hiatt - dhiatt89@gmail.com
  */
 
 public class MathModeView extends BaseGameView {

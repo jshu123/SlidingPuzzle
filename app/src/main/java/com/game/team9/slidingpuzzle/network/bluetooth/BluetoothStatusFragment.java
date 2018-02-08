@@ -22,7 +22,6 @@ import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -119,29 +118,6 @@ public class BluetoothStatusFragment extends Fragment {
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.secure: {
-                // Launch the DeviceListActivity to see devices and do scan
-               // Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-               // startActivityForResult(serverIntent, Constants.REQUEST_CONNECT_DEV);
-                return true;
-            }
-            case R.id.insecure: {
-                // Launch the DeviceListActivity to see devices and do scan
-               // Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-                //startActivityForResult(serverIntent, Constants.REQUEST_CONNECT_DEV_INSECURE);
-                return true;
-            }
-            case R.id.discoverable: {
-                // Ensure this device is discoverable by others
-                ensureDiscoverable();
-                return true;
-            }
-        }
-        return false;
-    }
     private void setStatus(CharSequence subTitle)
     {
         FragmentActivity activity = getActivity();

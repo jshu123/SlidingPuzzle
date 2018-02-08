@@ -34,8 +34,8 @@ public abstract class HighScoreDatabase extends RoomDatabase {
     public static List<User> getTop()
     {
         if(s_Instance != null)
-            s_Instance.userDao().getTop();
-        return new ArrayList<User>();
+            return s_Instance.userDao().getTop();
+        return new ArrayList<>();
     }
 
     public static int getScore(String name)
@@ -61,10 +61,11 @@ public abstract class HighScoreDatabase extends RoomDatabase {
 
         if(s_Instance != null)
         {
-            s_Instance.beginTransaction();
+            //s_Instance.beginTransaction();
             s_Instance.userDao().insertAll(user);
             s_Instance.userDao().Update(user.getName(), user.getScore());
-            s_Instance.endTransaction();
+          //  s_Instance.
+           // s_Instance.endTransaction();
         }
     }
 

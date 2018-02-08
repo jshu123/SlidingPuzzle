@@ -22,7 +22,8 @@ import android.util.Log;
 import com.game.team9.slidingpuzzle.MathOnlineDiscoveryActivity;
 
 /**
- * Created by x on 1/31/18.
+ * Created on: 1/31/18
+ *     Author: David Hiatt - dhiatt89@gmail.com
  */
 
 public class PeerBroadcastReceiver extends BroadcastReceiver implements WifiP2pManager.PeerListListener {

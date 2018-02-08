@@ -42,7 +42,7 @@ public class MathNameActivity extends AppCompatActivity implements CompoundButto
     public void onStartClicked(View view)
     {
         String name = m_Name.getText().toString();
-        if(name == null || name.length() == 0)
+        if(name.length() == 0)
         {
             Toast toast = Toast.makeText(getApplicationContext(), "Please enter a name", Toast.LENGTH_LONG);
             toast.show();
@@ -57,6 +57,7 @@ public class MathNameActivity extends AppCompatActivity implements CompoundButto
             {
                 pref.putInt("LastMathMode", i);
                 intent = new Intent(this, m_Class[i]);
+                intent.putExtra("MODE", i);
                 break;
             }
         }

@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by x on 1/30/18.
+ * Created on: 1/30/18
+ *     Author: David Hiatt - dhiatt89@gmail.com
  */
 
 public class NumberModeView extends BaseGameView implements BaseGameView.IBoardChangeListener {

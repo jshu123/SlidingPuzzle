@@ -12,12 +12,11 @@ package com.game.team9.slidingpuzzle;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Chronometer;
 
-import com.game.team9.slidingpuzzle.network.bluetooth.Constants;
+import com.game.team9.slidingpuzzle.network.IOnlineGameManager;
 
 public abstract class BaseMathOnlineActivity extends AppCompatActivity implements Chronometer.OnChronometerTickListener {
 
@@ -27,7 +26,7 @@ public abstract class BaseMathOnlineActivity extends AppCompatActivity implement
     private static final byte HEADER_SCORE = 4;
 
     private final Object m_Lock = new Object();
-    private final BluetoothHandler m_Handler = new BluetoothHandler();
+    private NetManager m_Manager;
     private boolean m_Server;
     private Chronometer m_Timer;
 
@@ -39,7 +38,10 @@ public abstract class BaseMathOnlineActivity extends AppCompatActivity implement
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        m_Manager =  new NetManager(this);
 //        m_Old = MathOnlineDiscoveryActivity.m_Service.transferHandle(m_Handler);
+        AppController app = (AppController)getApplicationContext();
+        app.setHandler(m_Manager);
         Intent intent = getIntent();
         m_Timer = findViewById(R.id.chronometer);
         m_Server = intent.getBooleanExtra("Server", false);
@@ -60,41 +62,25 @@ public abstract class BaseMathOnlineActivity extends AppCompatActivity implement
         m_Buffer[0] = 1;
         byte[] bytes = var.getText().toString().getBytes();
         m_Buffer[1] = (byte)bytes.length;
-        for (int i = 0; i < bytes.length; i++) {
-            m_Buffer[i+2] = bytes[i];
-        }
+        System.arraycopy(bytes, 0, m_Buffer, 2, bytes.length);
        // MathOnlineDiscoveryActivity.s_BlueMan.Write(m_Buffer, bytes.length + 2);
     }
 
-    protected void onMove()
+    protected void onMove(byte a, byte b, byte op, byte eq)
     {
 
     }
 
-    private void DecodeData(@NonNull byte[] buf, int len)
+    private void setTime(String time)
     {
-        if(buf.length > 0)
-        {
-            switch(buf[0])
-            {
-                case HEADER_TIME:
-                    if(!m_Server)
-                    {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                m_Timer.setText(new String(buf,1, len - 1));
-                            }
-                        });
-                    }
-                    break;
-                case HEADER_MOVE: onMove();
-                break;
-                case HEADER_QUIT:
-                case HEADER_SCORE:
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                m_Timer.setText(time);
             }
-        }
+        });
     }
+
 
     @Override
     protected void onDestroy() {
@@ -102,40 +88,37 @@ public abstract class BaseMathOnlineActivity extends AppCompatActivity implement
        // MathOnlineDiscoveryActivity.s_BlueMan.transferHandle(m_Old);
     }
 
-    private class BluetoothHandler extends Handler
+    private static class NetManager implements IOnlineGameManager
     {
-        private BluetoothHandler(){}
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-
-            switch (msg.what)
-            {
-                case Constants.MESSAGE_STATE_CHANGE:
-                    switch(msg.arg1)
-                    {
-                        case Constants.STATE_CONNECTED:
-                        case Constants.STATE_CONNECTING:
-                        case Constants.STATE_LISTEN:
-                        case Constants.STATE_NONE:
-                    }
-                    break;
-                case Constants.MESSAGE_DEVICE_NAME:
-                case Constants.MESSAGE_READ:
-                    DecodeData((byte[])msg.obj, msg.arg1);
-                    break;
-                case Constants.MESSAGE_TOAST:
-                case Constants.MESSAGE_WRITE:
-            }
+        private final BaseMathOnlineActivity m_Base;
+        public NetManager(BaseMathOnlineActivity b)
+        {
+            m_Base = b;
         }
 
         @Override
-        public void dispatchMessage(Message msg) {
-            super.dispatchMessage(msg);
+        public void receiveTime(String t) {
+            m_Base.setTime(t);
         }
 
         @Override
-        public boolean sendMessageAtTime(Message msg, long uptimeMillis) {
-            return super.sendMessageAtTime(msg, uptimeMillis);
+        public void receiveMove(byte a, byte b, byte op, byte eq) {
+            m_Base.onMove(a,b,op,eq);
+        }
+
+        @Override
+        public void receiveQuit() {
+
+        }
+
+        @Override
+        public void receiveRematchRequest() {
+
+        }
+
+        @Override
+        public void receiveRematchResponse(boolean b) {
+
         }
     }
 }

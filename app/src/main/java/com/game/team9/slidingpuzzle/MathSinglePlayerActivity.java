@@ -91,29 +91,27 @@ public class MathSinglePlayerActivity extends AppCompatActivity implements MathM
         m_User.setScore(m_Score);
         List<User> top = HighScoreDatabase.getTop();
         HighScoreDatabase.updateUser(m_User);
+        Intent intent = new Intent(MathSinglePlayerActivity.this, HighScoreActivity.class);
         for (User user : top) {
             if(m_Score > user.getScore())
             {
-                HighScoreFragment fragment = new HighScoreFragment();
-                Bundle b = new Bundle();
-                b.putString("Player", m_User.getName());
-                b.putInt("Score", m_Score);
-                fragment.setArguments(b);
-                //getSupportFragmentManager().beginTransaction().add(R.id.)
-                AlertDialog alertDialog = new AlertDialog.Builder(MathSinglePlayerActivity.this).create();
-                alertDialog.setTitle("New highscore");
-                alertDialog.setMessage("You have set a new highscore!");
-                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(@NonNull DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                alertDialog.show();
+                intent.putExtra("NewScore", true);
                 break;
             }
         }
-        finish();
+        AlertDialog alertDialog = new AlertDialog.Builder(MathSinglePlayerActivity.this).create();
+        alertDialog.setTitle("New highscore");
+        alertDialog.setMessage("You have set a new highscore!");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(@NonNull DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        startActivity(intent);
+                        finish();
+                    }
+                });
+        alertDialog.show();
+
     }
 
     @Override
@@ -127,7 +125,8 @@ public class MathSinglePlayerActivity extends AppCompatActivity implements MathM
 
     public void onHighscoreClicked(View view)
     {
-
+        Intent intent = new Intent(MathSinglePlayerActivity.this, HighScoreActivity.class);
+        startActivity(intent);
     }
 
     @Override

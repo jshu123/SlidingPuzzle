@@ -5,6 +5,7 @@
     <uses-permission
         android:name="android.permission.ACCESS_COARSE_LOCATION"
         android:required="false" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"
         android:required="false" />
@@ -18,13 +19,14 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <application
+        android:name=".AppController"
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:fullBackupContent="@xml/backup_descriptor">
+        android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,9 +35,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".NumberModeMenuActivity" />
-        <activity android:name=".MathModeStart" />
         <activity android:name=".MathSinglePlayerActivity" />
-        <activity android:name=".MathDoublePlayer" />
         <activity android:name=".MathDoubleBasicActivity" />
         <activity android:name=".MathDoubleCuthroatActivity" />
         <activity android:name=".NumberModeActivity" />
@@ -43,13 +43,21 @@
         <activity android:name=".MathOnlineDiscoveryActivity" />
 
         <service
-            android:name=".network.wifi.WifiP2PService"
+            android:name=".network.MathModeService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"
+            android:permission="" />
         <service
             android:name=".network.bluetooth.BluetoothService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"
+            android:permission="" />
+
+        <activity android:name=".HighScoreActivity" />
+        <activity android:name=".network.wifi.MathWifiActivity" />
+        <activity android:name=".network.MathClientActivity" />
+        <activity android:name=".network.MathServerAcitivity" />
+        <activity android:name=".network.bluetooth.MathBluetoothActivity" />
     </application>
 
 </manifest>

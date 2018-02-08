@@ -7,12 +7,21 @@
  * You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.game.team9.slidingpuzzle.network.wifi;
+package com.game.team9.slidingpuzzle.network;
+
+import java.io.InputStream;
 
 /**
- * Created on: 2/2/18
+ * Created on: 2/6/18
  * Author: David Hiatt - dhiatt89@gmail.com
  */
 
-public class Constants {
+public interface IDataReceiver {
+    boolean isActive();
+    void inboundData(String ip, InputStream stream);
+    void attachNotifier(IChangeNotifier c);
+
+         interface IChangeNotifier{
+             void onChange(boolean s);
+        }
 }

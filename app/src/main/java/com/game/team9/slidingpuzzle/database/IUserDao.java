@@ -24,4 +24,9 @@ public interface IUserDao {
     @Query("SELECT score FROM users WHERE name LIKE :first LIMIT 1")
     int getScore(String first);
 
+    @Query("SELECT * from users")
+    List<User> getAll();
+
+    @Query("SELECT COUNT(*) from users")
+    int getTotal();
 }

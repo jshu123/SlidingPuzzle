@@ -18,7 +18,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by x on 1/30/18.
+ * Created on: 1/30/18
+ *     Author: David Hiatt - dhiatt89@gmail.com
  */
 
 public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSolvedListener, Runnable {

@@ -32,43 +32,49 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:onClick="connectOnClick"
-                android:text="Connect" />
-
-            <Button
-                android:id="@+id/disconButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="disconnectOnClick"
-                android:text="Disconnect" />
-
-            <Button
-                android:id="@+id/playButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="playOnClick"
-                android:text="Play"
+                android:text="Connect"
                 android:visibility="gone" />
+
+            <Button
+                android:id="@+id/activateButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="activateOnClick"
+                android:text="Activate Wifi"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/acceptButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="acceptOnClick"
+                android:text="Accept"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/findButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="findOnClick"
+                android:text="Find Devices" />
         </LinearLayout>
         <TextView
-            android:id="@+id/dev_address"
+            android:id="@+id/infoText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
         <TextView
-            android:id="@+id/dev_info"
+            android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
         <TextView
-            android:id="@+id/group_owner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
         <TextView
-            android:id="@+id/group_ip"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:id="@+id/status_bar"
         android:orientation="vertical"
         android:layout_gravity="bottom"
         android:layout_height="37dp"
@@ -79,8 +85,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_margin="5dp"
-            android:textColor="@android:color/white"
-            android:id="@+id/status_text">
+            android:textColor="@android:color/white">
         </TextView>
     </LinearLayout>
 </FrameLayout>

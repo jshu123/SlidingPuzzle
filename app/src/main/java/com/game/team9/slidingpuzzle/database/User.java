@@ -5,7 +5,8 @@ import android.arch.persistence.room.Entity;
 import android.support.annotation.NonNull;
 
 /**
- * Created by x on 1/31/18.
+ * Created on: 1/31/18
+ *     Author: David Hiatt - dhiatt89@gmail.com
  */
 
 @Entity(primaryKeys = "name", tableName = "users")

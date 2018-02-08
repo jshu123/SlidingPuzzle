@@ -1,5 +1,6 @@
 package com.game.team9.slidingpuzzle;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -25,7 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by x on 1/30/18.
+ * Created on: 1/30/18
+ *     Author: David Hiatt - dhiatt89@gmail.com
  */
 
 public abstract class BaseGameView extends View implements ViewTreeObserver.OnGlobalLayoutListener{
@@ -61,14 +63,10 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     private boolean m_Reverse;
 
-    private float m_Dx;
-    private float m_Dy;
-
     private float m_Endx;
     private float m_Endy;
 
     private long m_TimeNow;
-    private long m_TimePrev;
     private long m_TimeStart;
 
     private boolean m_LockedforCPU = false;
@@ -84,6 +82,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
 
     private Bitmap m_TileMap;
+    private Bitmap m_TileSelect;
     private final AtomicBoolean m_Animating = new AtomicBoolean(false);
 
 
@@ -98,10 +97,12 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     }
 
     private GameThread m_Thread;
+    private Activity m_Activity;
 
     protected BaseGameView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
+        m_Activity = (Activity)context;
         Resources res = getResources();
         m_TilePaint.setColor(res.getColor(R.color.colorTiles));
         //m_BlankCol.setColor(res.getColor(R.color.colorBlank));
@@ -171,6 +172,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     @Override
     public final boolean onTouchEvent(@NonNull MotionEvent event) {
+        Log.i("MOTION", "= " + event.getAction());
         switch(event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
@@ -181,6 +183,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                 Reset();
                 m_LastIndex = coordsToIndex(m_LastClickx, m_LastClicky);
                 m_Swipe[m_SwipeIndex++] = m_LastIndex;
+                invalidate();
                 break;
             case MotionEvent.ACTION_MOVE:
                 if(m_LockedforCPU)
@@ -192,6 +195,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                     if (idx != m_LastIndex) {
                         m_LastIndex = idx;
                         m_Swipe[m_SwipeIndex++] = m_LastIndex;
+                        invalidate();
                     }
                 }
                 break;
@@ -201,18 +205,27 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                 if(m_SwipeIndex == 1)
                 {
                     int idx = coordsToIndex(event.getX(), event.getY());
-                    if(m_LastIndex == idx)
+                    boolean s = m_LastIndex == idx;
+                    if(s)
                     {
                         ChangeBlank();
                     }
                     Reset();
+                    invalidate();
                 }
                 else
                 {
                     onSwipeEvent(m_Swipe);
                     Reset();
+                    invalidate();
                 }
                 break;
+            case MotionEvent.ACTION_CANCEL:
+                Reset();
+                invalidate();
+                break;
+
+            //noinspection deprecation
             case MotionEvent.ACTION_POINTER_ID_MASK:
                 if(m_LockedforCPU)
                 {
@@ -249,9 +262,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                 m_Endx = (m_Blank % 5) * m_TileWidth;
                 m_Endy = (m_Blank > 0 ? m_Blank / 5 : 0) * m_TileHeight;
 
-                m_Dx = (m_Endx - m_CurX) / 10;
-                m_Dy = (m_Endy - m_CurY) / 10;
-//30 - 20 = 10
                 m_Reverse = m_Blank < m_LastIndex;
                 m_Tiles[m_LastIndex] = BLANK_VALUE;
 
@@ -289,6 +299,15 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
         m_LastIndex = -1;
     }
 
+    private boolean swipeContains(int idx)
+    {
+        for (int i : m_Swipe) {
+            if(i == idx)
+                return true;
+        }
+        return false;
+    }
+
 
     @Override
     protected final void onDraw(@NonNull Canvas canvas) {
@@ -312,7 +331,10 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             if (m_Tiles[i] != BLANK_VALUE) {
                 float rx = (i % 5) * m_TileWidth;
                 float ry = (i > 0 ? i / 5 : 0) * m_TileHeight;
-                canvas.drawBitmap(m_TileMap, rx, ry, m_TilePaint);
+                if(swipeContains(i))
+                    canvas.drawBitmap(m_TileSelect, rx, ry, m_TilePaint);
+                    else
+                    canvas.drawBitmap(m_TileMap, rx, ry, m_TilePaint);
                 //canvas.drawRect(rx + (m_GridWidth / 2), ry + (m_GridWidth / 2), rx + m_TileWidth - (m_GridWidth / 2), ry + m_TileHeight - (m_GridWidth / 2), m_TilePaint);
                 canvas.drawText(boardToText(m_Tiles[i]), rx + m_XFontOffset, ry + m_YFontOffset, m_TextPaint);
             } else
@@ -350,7 +372,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             }
             canvas.drawBitmap(m_TileMap, m_CurX, m_CurY, m_TilePaint);
             canvas.drawText(boardToText(m_Tiles[m_LastBlank]), m_CurX + m_XFontOffset, m_CurY + m_YFontOffset, m_TextPaint);
-            m_TimePrev = m_TimeNow;
         }
 
 
@@ -414,14 +435,23 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             Paint.FontMetrics fm = m_TextPaint.getFontMetrics();
             m_YFontOffset = (m_TileHeight / 2) - (fm.ascent + fm.descent) / 2;
             m_TileMap = Bitmap.createBitmap((int)m_TileWidth, (int)m_TileHeight, Bitmap.Config.ARGB_8888);
-            Drawable d = getResources().getDrawable(R.drawable.tile);
+            m_TileSelect = Bitmap.createBitmap((int)m_TileWidth, (int)m_TileHeight, Bitmap.Config.ARGB_8888);
+            @SuppressWarnings("deprecation") Drawable d = getResources().getDrawable(R.drawable.tile);
             d.setBounds(0,0,(int)m_TileWidth, (int)m_TileHeight);
             Canvas c = new Canvas(m_TileMap);
             d.draw(c);
+
+            //noinspection deprecation
+            d = getResources().getDrawable(R.drawable.tile_select);
+            d.setBounds(0,0,(int)m_TileWidth, (int)m_TileHeight);
+            c = new Canvas(m_TileSelect);
+            d.draw(c);
            // m_TileMap = applyFleaEffect(m_TileMap);
             //m_TileMap = Bitmap.createBitmap((int)m_TileWidth, (int)m_TileHeight,Bitmap.Config.ARGB_8888);
+
             m_TilePaint.setShader(new BitmapShader(m_TileMap, Shader.TileMode.MIRROR, Shader.TileMode.CLAMP));
-            m_Thread = new GameThread(m_Animating, this);
+            m_Thread = new GameThread(m_Animating, ()->m_Activity.runOnUiThread(()->invalidate()));
+            //m_Thread;
             Executors.defaultThreadFactory().newThread(m_Thread).start();
             while(m_Init.get() != 2)
                 try {
@@ -480,14 +510,19 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
         void OnStart();
     }
 
+    private interface IInvalidate
+    {
+        void doInvalidate();
+    }
+
     private static class GameThread extends  Thread
     {
         private final  Object mm_Lock = new Object();
         private final AtomicBoolean m_Flag;
-        private final View m_View;
+        private final IInvalidate m_View;
         private boolean mm_Halt;
 
-        public GameThread(final AtomicBoolean flag, final View view)
+        public GameThread(final AtomicBoolean flag, final IInvalidate view)
         {
             m_Flag = flag;
             m_View = view;
@@ -514,7 +549,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                m_View.invalidate();
+                m_View.doInvalidate();
             }
             Log.i("ANIMATE", "End - " +  android.os.Process.myPid());
         }
