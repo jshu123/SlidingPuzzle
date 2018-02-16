@@ -54,7 +54,7 @@ public class DevListFragment extends ListFragment implements WifiP2pManager.Peer
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        setListAdapter(new PeerListAdapter(getActivity(), R.layout.row_device, m_Peers));
+        setListAdapter(new PeerListAdapter(getActivity(), R.layout.fragment_dev_detail, m_Peers));
     }
 
     public void setListAdapter(PeerListAdapter adapter) {
@@ -73,7 +73,7 @@ public class DevListFragment extends ListFragment implements WifiP2pManager.Peer
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return m_ContentView = inflater.inflate(R.layout.fragment_peer_list, container, false);
+        return m_ContentView = inflater.inflate(R.layout.fragment_dev_list, container, false);
     }
 
     public void UpdateDevice(DeviceObject d)

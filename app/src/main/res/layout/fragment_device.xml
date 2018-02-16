@@ -12,7 +12,11 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="horizontal">
-
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@android:id/list">
+    </ListView>
     <TextView
         android:id="@+id/nameText"
         android:layout_width="wrap_content"

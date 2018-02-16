@@ -34,7 +34,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     public static final int BLANK_VALUE = -1;
 
-    protected static final boolean m_Debug = true;
+    protected static final boolean m_Debug = false;
 
     private static final Paint m_TilePaint = new Paint();
     private static final Paint m_Grid= new Paint();

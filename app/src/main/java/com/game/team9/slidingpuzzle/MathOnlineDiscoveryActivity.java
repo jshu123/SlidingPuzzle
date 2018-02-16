@@ -9,133 +9,79 @@
 
 package com.game.team9.slidingpuzzle;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.game.team9.slidingpuzzle.network.MathClientActivity;
-import com.game.team9.slidingpuzzle.network.MathServerAcitivity;
+import com.game.team9.slidingpuzzle.network.DeviceObject;
 import com.game.team9.slidingpuzzle.network.bluetooth.Constants;
 import com.game.team9.slidingpuzzle.network.bluetooth.MathBluetoothActivity;
+import com.game.team9.slidingpuzzle.network.wifi.DevDetailFragment;
+import com.game.team9.slidingpuzzle.network.wifi.DevListFragment;
 import com.game.team9.slidingpuzzle.network.wifi.MathWifiActivity;
 import com.game.team9.slidingpuzzle.network.wifi.PeerBroadcastReceiver;
+import com.game.team9.slidingpuzzle.network.wifi.WifiBroadcastReceiver;
 
-import java.util.concurrent.Executors;
-
-public class MathOnlineDiscoveryActivity extends AppCompatActivity {
+public class MathOnlineDiscoveryActivity extends AppCompatActivity implements WifiBroadcastReceiver.IWifiStatusChanger, DevListFragment.IDeviceListener {
 
     private static PeerBroadcastReceiver s_Receiver;
     private static WifiP2pManager.Channel s_Channel;
-    private static WifiP2pManager s_Manager;
+    private WifiP2pManager m_Manager;
 
-    private static final Object m_Lock = new Object();
-
-    private static boolean m_Bound = false;/*
-    @Nullable
-    private static BluetoothService m_Service;
-    @Nullable
-    private final ServiceConnection m_Conn = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            // This is called when the connection with the service has been
-            // established, giving us the object we can use to
-            // interact with the service.  We are communicating with the
-            // service using a Messenger, so here we get a client-side
-            // representation of that from the raw IBinder object.
-            Log.i("SERVICE", "Connected");
-            // MathModeService serv = (MathModeService)iBinder;
-            synchronized (m_Lock) {
-                if(!m_Bound) {
-                    BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder)iBinder;
-
-                    m_Service = binder.getService();
-                    m_Service.setHandler(m_Bhandle);
-                    m_Bound = true;
-                }
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            Log.e("SERVICE", "Disconnect");
-            synchronized (m_Lock) {
-                if(m_Bound)
-                {
-                    m_Service.closeHandler();
-                    m_Service = null;
-                    m_Bound = false;
-                }
-            }
-        }
-    };
-
-
-    private final BluetoothHandler m_Bhandle = new BluetoothHandler();
-*/
-    private static final IntentFilter s_WFilter = new IntentFilter();
-    private static final IntentFilter s_BFilter = new IntentFilter();
-
-    static {
-        s_WFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        s_WFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        s_WFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        s_WFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-
-        s_BFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
-        s_BFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        s_BFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-        s_BFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        s_BFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
-        s_BFilter.addAction(BluetoothDevice.ACTION_FOUND);
-        s_BFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
-    }
-
+    private WifiP2pManager.Channel m_Channel;
+    private WifiBroadcastReceiver m_WifiReceiver;
+    private DevListFragment m_DevList;
+    private DevDetailFragment m_DevDetail;
     private boolean m_WifiEnabled;
-    private boolean m_BlueEnabled;
     private TextView m_Status;
-    private TextView m_BlueText;
+    private boolean m_Bound;
+    private Button m_Discover;
+    private Class m_Class;
 
     private int m_Mode;
+    private static final IntentFilter m_WifiFilter = new IntentFilter();
 
+    static {
+        m_WifiFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        m_WifiFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        m_WifiFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        m_WifiFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+
+    }
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_math_online_discovery);
         m_Status = findViewById(R.id.statusText);
-        Executors.defaultThreadFactory().newThread(() -> {
-
-            setWifiStatus(s_Manager != null);
-        }).start();
         Intent intent = getIntent();
-        m_Mode = intent.getIntExtra("MODE", -1);
+        m_Class = intent.getIntExtra("MODE", -1) == 1 ? MathDoubleCuthroatActivity.class : MathDoubleBasicActivity.class;
         WifiManager wifiMgr = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
+        m_Discover = findViewById(R.id.wifiButton);
 
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (BluetoothAdapter.getDefaultAdapter() == null) {
-            m_Status.setText("No bluetooth service available.  ");
 
-        } else
-            findViewById(R.id.blueButton).setEnabled(m_BlueEnabled = true);
         if (!wifiMgr.isWifiEnabled())
             m_WifiEnabled = wifiMgr.setWifiEnabled(true);
         if (!mWifi.isAvailable()) {
@@ -143,117 +89,127 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity {
         } else if (!wifiMgr.isP2pSupported()) {
             m_Status.setText(m_Status.getText() + "Wifi P2P not supported!  ");
         } else {
-            findViewById(R.id.wifiButton).setEnabled(m_WifiEnabled = true);
-            s_Manager = (WifiP2pManager) getSystemService(WIFI_P2P_SERVICE);
+            m_Manager = (WifiP2pManager) getSystemService(WIFI_P2P_SERVICE);
         }
 
-        if (s_Manager == null) {
+
+        if (m_Manager == null) {
             m_Status.setText(m_Status.getText() + "  No p2p manager found!  ");
-            m_WifiEnabled = wifiMgr.setWifiEnabled(false);
+            wifiMgr.setWifiEnabled(false);
+            setWifiStatus(false);
         } else
-            s_Channel = s_Manager.initialize(this, getMainLooper(), null);
+        {
+            m_Channel = m_Manager.initialize(this, getMainLooper(), null);
+            setWifiStatus(true);
+        }
     }
 
     public void Wifi_OnClick(View view) {
-        Intent intent = new Intent(MathOnlineDiscoveryActivity.this, MathWifiActivity.class);
-        intent.putExtra("MODE", m_Mode);
-        startActivity(intent);
+        Start();
     }
 
-    public void Blue_OnClick(View view) {
-        Intent intent = new Intent(MathOnlineDiscoveryActivity.this, MathBluetoothActivity.class);
-        intent.putExtra("MODE", m_Mode);
-        startActivity(intent);
-    }
-    
     private void setWifiStatus(boolean b)
     {
         m_WifiEnabled = b;
+        if(b && !m_Bound)
+        {
+            Start();
+        }
+        else if(!b && m_Bound)
+        {
+            LocalBroadcastManager.getInstance(MathOnlineDiscoveryActivity.this).unregisterReceiver(m_WifiReceiver);
+            m_Bound = false;
+        }
+        m_Discover.setEnabled(b);
+    }
+
+    private void Start()
+    {
+        LocalBroadcastManager.getInstance(MathOnlineDiscoveryActivity.this).registerReceiver(m_WifiReceiver, m_WifiFilter);
+        m_Bound = true;
     }
 
 
+
+
+
+    @Override
+    protected void onResume() {
+        if(m_Bound) {
+            m_WifiReceiver = new WifiBroadcastReceiver(m_Manager, m_Channel, this);
+            LocalBroadcastManager.getInstance(MathOnlineDiscoveryActivity.this).registerReceiver(m_WifiReceiver, m_WifiFilter);
+        }
+        super.onResume();
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(m_Bound)
+            LocalBroadcastManager.getInstance(MathOnlineDiscoveryActivity.this).unregisterReceiver(m_WifiReceiver);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
     public void onWifiStatusChanged(boolean b)
     {
-            Toast toast = new Toast(getApplicationContext());
-            toast.setText(b ? "Wifi enabled" : "Wifi disabled");
-            toast.setDuration(Toast.LENGTH_LONG);
-            toast.show();
-    }
-
-    private void tryBluetooth()
-    {
-        endWifi();
-    /*    if(!m_Bound)
+        Toast toast = new Toast(getApplicationContext());
+        toast.setText(b ? "Wifi enabled" : "Wifi disabled");
+        toast.setDuration(Toast.LENGTH_LONG);
+        toast.show();
+        m_WifiEnabled = b;
+        if(b)
         {
-          //  m_Bound= true;
-           // s_BlueMan.setHandler(m_Bhandle);
-            Intent intent = new Intent(this, BluetoothService.class);
-            bindService(intent, m_Conn, Context.BIND_AUTO_CREATE);
+            m_Manager.discoverPeers(s_Channel, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    m_Status.setText("Discovering...");
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                    m_Status.setText("Discovery failed.");
+                }
+            });
         }
-        if(m_Service != null) {
-            switch (m_Service.getBState()) {
-                case Constants.STATE_CONNECTED:
-                case Constants.STATE_CONNECTING:
-                case Constants.STATE_LISTEN:
-                    break;
-                case Constants.STATE_NONE:
-                    m_Service.Start();
-                    break;
-                case Constants.STATE_DISABLED:
-                    Intent req = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    startActivityForResult(req, Constants.REQUEST_ENABLE_BT);
-                    break;
-                case Constants.STATE_UNSUPPORTED:
-                    endBluetooth();
-                    break;
-            }
-        }*/
     }
 
-    private void endBluetooth()
-    {
-        if(m_Bound)
-        {
-            m_Bound = false;
-      //      unbindService(m_Conn);
-      //      m_Service.closeHandler();
-        }
+    @Override
+    public void showDetails(DeviceObject device) {
+        m_DevDetail.devInfo(device);
+    }
+
+    @Override
+    public void cancelDisconnect() {
 
     }
 
-    private void tryWifi()
-    {
-        endBluetooth();
-        Handler handler = new Handler(Looper.getMainLooper());
-        Context ctx = this;
-        s_Manager.discoverPeers(s_Channel, new WifiP2pManager.ActionListener() {
+    @Override
+    public void connect(Parcelable config) {
+        m_Manager.connect(m_Channel, (WifiP2pConfig) config, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(ctx, "Peer discovery started", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                Intent intent = new Intent(MathOnlineDiscoveryActivity.this, m_Class);
+                startActivity(intent);
             }
 
             @Override
             public void onFailure(int reason) {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(ctx, "Peer discovery Failed", Toast.LENGTH_SHORT).show();
-                    }
-                });
+
             }
         });
+    }
+
+    @Override
+    public void disconnect() {
 
     }
 
-    private void endWifi()
-    {
-
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -261,58 +217,6 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity {
         if(grantResults[0] == PackageManager.PERMISSION_DENIED)
         {
 
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == Constants.REQUEST_ENABLE_BT)
-        {
-            if(resultCode == RESULT_OK)
-            {
-                tryBluetooth();
-            }
-            else
-            {
-               endBluetooth();
-            }
-        }
-    }
-
-
-    private class BluetoothHandler extends Handler
-    {
-        private BluetoothHandler(){}
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-
-            switch (msg.what)
-            {
-                case Constants.MESSAGE_STATE_CHANGE:
-                    switch(msg.arg1)
-                    {
-                        case Constants.STATE_CONNECTED:
-                        case Constants.STATE_CONNECTING:
-                        case Constants.STATE_LISTEN:
-                        case Constants.STATE_NONE:
-                    }
-                    break;
-                case Constants.MESSAGE_DEVICE_NAME:
-                case Constants.MESSAGE_READ:
-                case Constants.MESSAGE_TOAST:
-                case Constants.MESSAGE_WRITE:
-            }
-        }
-
-        @Override
-        public void dispatchMessage(Message msg) {
-            super.dispatchMessage(msg);
-        }
-
-        @Override
-        public boolean sendMessageAtTime(Message msg, long uptimeMillis) {
-            return super.sendMessageAtTime(msg, uptimeMillis);
         }
     }
 }

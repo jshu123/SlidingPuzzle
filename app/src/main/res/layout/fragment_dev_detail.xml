@@ -14,6 +14,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.game.team9.slidingpuzzle.network.wifi.DevDetailFragment"
     android:visibility="gone">
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@android:id/list">
+    </ListView>
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="vertical"

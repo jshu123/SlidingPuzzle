@@ -16,6 +16,7 @@ import android.support.annotation.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
@@ -24,6 +25,7 @@ import static com.game.team9.slidingpuzzle.network.Constants.ACTION_SEND_MOVE;
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_SEND_QUIT;
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_SEND_REJECT;
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_SEND_TIME;
+import static com.game.team9.slidingpuzzle.network.Constants.DEFAULT_PORT;
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_MOVEA;
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_OWNER_ADDRESS;
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_OWNER_PORT;
@@ -40,6 +42,25 @@ public class MathModeService extends IntentService {
     public static final byte TIME_MSG = 11;
     public static final byte MOVE_MSG = 12;
     public static final byte QUIT_MSG = 13;
+
+    private static ServerSocket m_Server;
+    private static Socket m_Connection;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        try {
+            m_Server = new ServerSocket(DEFAULT_PORT);
+           // m_Server.
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
