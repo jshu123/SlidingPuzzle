@@ -45,7 +45,7 @@ public class NumberModeView extends BaseGameView implements BaseGameView.IBoardC
         }
     }
 
-    public static boolean checkSolved(@NonNull int env[])
+    public static boolean checkSolved(@NonNull byte env[])
     {
         if(env[env.length - 1] != 0)
             return false;

@@ -11,13 +11,24 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/toast_container"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_height="match_parent"
     android:alpha=".6"
-    android:orientation="horizontal"
+    android:orientation="vertical"
+    android:animateLayoutChanges="true"
+    android:clipChildren="false"
     android:padding="8dp">
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:alpha=".8"
+        android:textStyle="bold"
+        android:textSize="25sp"
+        android:shadowColor="#000000"
+        android:shadowDx="5"
+        android:shadowDy="5"
+        android:shadowRadius="20"
+        android:padding="50dp"
+        android:layout_margin="50dp"/>
 </LinearLayout>

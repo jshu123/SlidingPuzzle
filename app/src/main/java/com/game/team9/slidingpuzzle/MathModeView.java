@@ -16,12 +16,13 @@ import java.util.Set;
 public class MathModeView extends BaseGameView {
 
 
-    private final Set<Equation> m_Hist = new HashSet<>();
-
-    private final Set<IScored> m_OnScored = new HashSet<>();
     public MathModeView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
+   /* private final Set<Equation> m_Hist = new HashSet<>();
+
+    private final Set<IScored> m_OnScored = new HashSet<>();
+
 
 
     public void AttachScoreListener(IScored s)
@@ -56,7 +57,7 @@ public class MathModeView extends BaseGameView {
             }
 
         }
-    }
+    }*/
 
     @Override
     protected String boardToText(int value) {
@@ -74,7 +75,7 @@ public class MathModeView extends BaseGameView {
         return "?";
     }
 
-    private static boolean validSwipe(int[] idx)
+   /* private static boolean validSwipe(int[] idx)
     {
         if(idx[0] == -1)
             return false;
@@ -226,5 +227,5 @@ public class MathModeView extends BaseGameView {
         Valid,
         Invalid,
         Taken
-    }
+    }*/
 }

@@ -10,7 +10,6 @@
     <view
         android:id="@+id/playerView"
         class="com.game.team9.slidingpuzzle.NumberModeView"
-        id="@+id/view"
         android:layout_width="295dp"
         android:layout_height="302dp"
         android:layout_marginEnd="8dp"
@@ -23,7 +22,6 @@
     <view
         android:id="@+id/aiView"
         class="com.game.team9.slidingpuzzle.NumberModeView"
-        id="@+id/view2"
         android:layout_width="295dp"
         android:layout_height="156dp"
         android:layout_marginEnd="8dp"

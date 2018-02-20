@@ -9,54 +9,61 @@
 
 package com.game.team9.slidingpuzzle.network;
 
+import android.os.Build;
+import android.os.Bundle;
+;
+import android.util.Log;
+
+import com.game.team9.slidingpuzzle.AppController;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created on: 2/6/18
  * Author: David Hiatt - dhiatt89@gmail.com
  */
 
-public class ConListener extends Thread implements IDataReceiver.IChangeNotifier {
+//A connection to this server indicates a request to play a game.
+public class ConListener extends Thread {
+    private static final String TAG = "Server";
     private int m_Port;
     private ServerSocket m_Server;
-    private final IDataReceiver m_Receiver;
-    private final Object m_Lock = new Object();
+    //private final DataHandler m_Receiver;
+    private final ISocketHandler m_Handler;
 
     private boolean m_Crash = false;
 
-    public ConListener(int p, IDataReceiver r) {
+  //  private final HashMap<Socket, NetworkReceiver> m_Listeners = new HashMap<>();
+
+    //final BlockingQueue<Bundle> m_MessageQueue = new LinkedBlockingQueue<>();
+
+    public ConListener(int p, ISocketHandler s) {
+        Log.i(TAG, "Started on port " + p);
         m_Port = p;
-        m_Receiver = r;
-        r.attachNotifier(this);
-    }
-
-
-    public void onChange(boolean s)
-    {
-        synchronized (m_Lock)
-        {
-            m_Lock.notifyAll();
-        }
+        //m_Receiver = r;
+        m_Handler = s;
     }
 
     public void Close()
     {
         m_Crash = true;
-        synchronized (m_Lock)
-        {
-            m_Lock.notifyAll();
-        }
+        Log.i(TAG, "Closing ");
     }
+
 
     @Override
     public void run() {
+        Log.i(TAG, "Starting");
         try {
             m_Server = new ServerSocket(m_Port);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error opening server socket - " + e);
         }
 
         if(m_Server != null && !m_Server.isBound()) {
@@ -64,40 +71,38 @@ public class ConListener extends Thread implements IDataReceiver.IChangeNotifier
                 m_Server.bind(new InetSocketAddress(m_Port));
             } catch (IOException e) {
                 m_Crash = true;
-                e.printStackTrace();
+                Log.e(TAG, "Error binding server socket - " + e);
             }
         }
 
         Socket s = null;
         while(!m_Crash)
         {
-            s = null;
-            synchronized (m_Lock) {
-                while (!m_Crash && !m_Receiver.isActive()) {
-                    try {
-                        m_Lock.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (!m_Crash) {
-                    try {
+            try {
                         s = m_Server.accept();
-                        m_Receiver.inboundData(s.getInetAddress().getHostAddress(), s.getInputStream());
+                Log.i(TAG, "Inbound request! - " + s);
+                     //   NetworkReceiver n = new NetworkReceiver(s, AppController.getInstance());
+                      //  m_Listeners.put(s, n);
+                      //  n.start();
+
+                m_Handler.handleSocket(s);  //Receiver should either close socket or use it for a game.
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "Error accepting client data - " + e);
                     }
-                    finally {
-                        if(s != null) {
-                            try {
-                                s.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }
+
         }
+      /*  m_Listeners.forEach((k,v)->{
+            v.Close();
+            try {
+                k.close();
+            } catch (IOException e) {
+                Log.e(TAG, "Error closing client socket - " + e);
+            }
+        });*/
+        Log.i(TAG, "Closed");
+    }
+
+    public interface ISocketHandler{
+        void handleSocket(Socket s);
     }
 }

@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.game.team9.slidingpuzzle">
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission
         android:name="android.permission.CHANGE_NETWORK_STATE"
         android:required="true" />
@@ -49,16 +51,12 @@
             android:exported="true"
             android:permission="" />
         <service
-            android:name=".network.bluetooth.BluetoothService"
+            android:name=".network.BluetoothService"
             android:enabled="true"
             android:exported="true"
             android:permission="" />
 
         <activity android:name=".HighScoreActivity" />
-        <activity android:name=".network.wifi.MathWifiActivity" />
-        <activity android:name=".network.MathClientActivity" />
-        <activity android:name=".network.MathServerAcitivity" />
-        <activity android:name=".network.bluetooth.MathBluetoothActivity" />
     </application>
 
 </manifest>

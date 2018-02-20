@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
+import com.game.team9.slidingpuzzle.network.MathModeService;
 
 public class MainActivity extends AppCompatActivity {
     @Override
@@ -14,8 +15,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Thread.currentThread().setName("Main UI");
         HighScoreDatabase.Initialize(getApplicationContext());
-        /*Intent intent = new Intent(this, MathModeService.class);
-        bindService(intent, MathOnlineDiscoveryActivity.m_Conn, Context.BIND_AUTO_CREATE);*/
+        Intent intent = new Intent(this, MathModeService.class);
+        startService(intent);
+        //bindService(intent, MathOnlineDiscoveryActivity.m_Conn, Context.BIND_AUTO_CREATE);
     }
 
     public void numberOnClick(View view)
@@ -36,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Intent intent = new Intent(this, MathModeService.class);
+        stopService(intent);
         HighScoreDatabase.DestroyInstance();
     }
 }

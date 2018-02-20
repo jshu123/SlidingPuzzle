@@ -24,8 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSolvedListener, Runnable {
 
-    private static final boolean m_Debug = true;
-
     private static final boolean m_BoringAI = true;
 
 
@@ -91,7 +89,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
 
     @Override
     public void Changed(boolean b) {
-        if(m_Debug)
+        if(AppController.DEBUG)
         Log.d("CHANGE", "RECEIVED");
         {
             if (!b) {
@@ -103,7 +101,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             if (!m_Lock.compareAndSet(true, false))
                 m_Lock.notify();
         }
-        if(m_Debug)
+        if(AppController.DEBUG)
             Log.d("CHANGE", "DONE");
     }
 
@@ -119,14 +117,14 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
 
     private void BoringAIThread()
     {
-        if(m_Debug)
+        if(AppController.DEBUG)
             Log.i("AI", "START");
         int last = -1;
         //up = 0
         //down == 1
         //left == 2
         //right == 3
-        int[] tiles = m_Game.getTiles();
+        byte[] tiles = m_Game.getTiles();
         int blank = m_Game.getBlank();
         Random rand = new Random();
         float xOffset = m_Game.getTileWidth() / 2;
@@ -144,7 +142,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
 
             float dx = x * m_Game.getTileWidth() + xOffset;
             float dy = y * m_Game.getTileHeight() + yOffset;
-            if(m_Debug)
+            if(AppController.DEBUG)
             Log.d("AI", blank + ": (" + x + ", " + y + ") @ " + dx + ", " + dy);
             MotionEvent event = MotionEvent.obtain(SystemClock.uptimeMillis(),
                     SystemClock.uptimeMillis() + 100,
@@ -157,7 +155,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
                 while (!m_Stop && !m_Lock.compareAndSet(false, true))
                     try {
                         m_Status = ThreadStatus.WAITING;
-                        if(m_Debug)
+                        if(AppController.DEBUG)
                         Log.d("CHANGE", "WAITING");
                         m_Lock.wait(400+rand.nextInt(150));
                     } catch (InterruptedException e) {
@@ -167,7 +165,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
                     }
                     if(m_Stop)
                         break;
-                if(m_Debug)
+                if(AppController.DEBUG)
                     Log.d("CHANGE", "ADDED");
                 m_Game.dispatchTouchEvent(event);
             }
@@ -177,7 +175,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
                 e.printStackTrace();
             }
         }
-        if(m_Debug)
+        if(AppController.DEBUG)
         Log.i("AI", "EXIT");
     }
 
@@ -289,7 +287,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
     private void SearchThread()
     {
 
-        if(m_Debug)
+        if(AppController.DEBUG)
             Log.i("AI Thread Started", "ID: " + android.os.Process.myTid());
         TreeSet<state> tree = new TreeSet<>(new Comparator<state>() {
             @Override
@@ -326,10 +324,10 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
   //              else
 //                    m_Total -= child.ClosePath();
             }
-            if(m_Debug && (m_Total % 1000 < 5))
+            if(AppController.DEBUG && (m_Total % 1000 < 5))
                 Log.i("SEARCH", "Opened " + m_Total + " Best " + b);
         }
-        if(m_Debug)
+        if(AppController.DEBUG)
             Log.i("SEARCH", "Exiting with " + m_Total + " at " + bound);
     }
 
@@ -342,8 +340,8 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
         public final Direction dir;
         public final int from;
         public final int to;
-        public final int env[] = new int[25];
-        public final int v;
+        public final byte env[] = new byte[25];
+        public final byte v;
         public final int g;
         public final int h;
         private final boolean[] m_Conflicts = new boolean[25];
@@ -361,7 +359,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             }
         });
 
-        public state(@NonNull int e[])
+        public state(@NonNull byte e[])
         {
             dir = Direction.ROOT;
             to = v = -1;
@@ -373,7 +371,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             parent = null;
         }
 
-        public state(int f, int t, @NonNull int[] e, int gg)
+        public state(int f, int t, @NonNull byte[] e, int gg)
         {
             to = t;
             from = f;
@@ -381,7 +379,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             g=gg;
             System.arraycopy(e, 0, env, 0, e.length);
             env[f] = e[t];
-            env[t] = v;
+            env[t] = (byte) v;
             //opened = true;
             //touched = false;
             parent = null;
@@ -437,7 +435,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             return false;
         }
 
-        public boolean match(@NonNull int[] a)
+        public boolean match(@NonNull byte[] a)
         {
             boolean ret = true;
             for(int i = 0; i < a.length; ++i)

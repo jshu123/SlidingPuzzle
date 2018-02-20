@@ -7,90 +7,42 @@
   ~ You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="fill_parent"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.game.team9.slidingpuzzle.network.wifi.DevDetailFragment"
-    android:visibility="gone">
-    <ListView
+    android:layout_height="fill_parent">
+
+    <ImageView
+        android:id="@+id/row_icon"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:contentDescription="TODO"
+        android:padding="10dp" />
+
+    <Button
+        android:id="@+id/connectButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@android:id/list">
-    </ListView>
-    <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        tools:context="com.game.team9.slidingpuzzle.network.wifi.DevDetailFragment"
-        android:layout_height="match_parent">
-        <LinearLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            tools:context="com.game.team9.slidingpuzzle.network.wifi.DevDetailFragment"
-            android:layout_height="wrap_content">
+        android:text="@string/connect" />
 
-            <Button
-                android:id="@+id/connectButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="connectOnClick"
-                android:text="Connect"
-                android:visibility="gone" />
+    <Button
+        android:id="@+id/declineButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/decline" />
 
-            <Button
-                android:id="@+id/activateButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="activateOnClick"
-                android:text="Activate Wifi"
-                android:visibility="gone" />
+    <TextView
+        android:id="@+id/nameText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:textSize="20sp"/>
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:textSize="20sp"/>
 
-            <Button
-                android:id="@+id/acceptButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="acceptOnClick"
-                android:text="Accept"
-                android:visibility="gone" />
-
-            <Button
-                android:id="@+id/findButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="findOnClick"
-                android:text="Find Devices" />
-        </LinearLayout>
-        <TextView
-            android:id="@+id/infoText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:id="@+id/statusText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:orientation="vertical"
-        android:layout_gravity="bottom"
-        android:layout_height="37dp"
-        android:layout_marginBottom="3dp"
-        android:background="@android:color/background_dark">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_margin="5dp"
-            android:textColor="@android:color/white">
-        </TextView>
-    </LinearLayout>
-</FrameLayout>
+</LinearLayout>

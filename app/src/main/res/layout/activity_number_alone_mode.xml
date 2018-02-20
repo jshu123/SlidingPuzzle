@@ -9,7 +9,6 @@
     <view
         android:id="@+id/playerView"
         class="com.game.team9.slidingpuzzle.NumberModeView"
-        id="@+id/view"
         android:layout_width="299dp"
         android:layout_height="413dp"
         android:layout_marginEnd="8dp"

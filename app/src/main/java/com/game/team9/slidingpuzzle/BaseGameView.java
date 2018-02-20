@@ -34,8 +34,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     public static final int BLANK_VALUE = -1;
 
-    protected static final boolean m_Debug = false;
-
     private static final Paint m_TilePaint = new Paint();
     private static final Paint m_Grid= new Paint();
     private final Paint m_TextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -47,7 +45,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private final List<IGameStart> m_Starters = new ArrayList<>();
     private final AtomicInteger m_Init = new AtomicInteger(0);
     private final Object m_Lock = new Object();
-    private final int[] m_Tiles = new int[25];
+    private final byte[] m_Tiles = new byte[25];
 
 
     private float m_TileWidth;
@@ -85,6 +83,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private Bitmap m_TileSelect;
     private final AtomicBoolean m_Animating = new AtomicBoolean(false);
 
+    private ISwipeHandler m_Swiper;
 
     static{
         m_TilePaint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -97,12 +96,12 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     }
 
     private GameThread m_Thread;
-    private Activity m_Activity;
+   // private Activity m_Activity;
 
     protected BaseGameView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
-        m_Activity = (Activity)context;
+        //m_Activity = (Activity)context;
         Resources res = getResources();
         m_TilePaint.setColor(res.getColor(R.color.colorTiles));
         //m_BlankCol.setColor(res.getColor(R.color.colorBlank));
@@ -130,19 +129,26 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
      * Must be called to initialize the board
      * @param board
      */
-    public void Initialize(@NonNull int board[])
+    public void Initialize(@NonNull byte board[], ISwipeHandler handler)
     {
-        Initialize(board,false);
+        Initialize(board,handler, false);
     }
 
-    public void Initialize(@NonNull int board[], boolean ai)
+    private final AtomicBoolean m_TileInit = new AtomicBoolean(false);
+    private final AtomicBoolean m_TileFinished = new AtomicBoolean(false);
+
+    public void Initialize(@NonNull byte board[], ISwipeHandler handler, boolean ai)
     {
-        if(m_Init.compareAndSet(0, 1)) {
-            synchronized (m_Lock) {
+        if(m_TileInit.compareAndSet(false, true))
+        { synchronized (m_Lock) {
+                m_Swiper = handler;
                 m_LockedforCPU = ai;
                 m_Blank = findBlank(board);
                 System.arraycopy(board, 0, m_Tiles, 0, board.length);
-                m_Init.set(2);
+                if(m_Init.incrementAndGet() == 2)
+                {
+                    finishInit();
+                }
             }
         }
     }
@@ -168,7 +174,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     public float getTileWidth(){return m_TileWidth;}
     public float getTileHeight(){return m_TileHeight;}
     public int getBlank(){return m_Blank;}
-    public int[] getTiles(){return m_Tiles.clone();}
+    public byte[] getTiles(){return m_Tiles.clone();}
 
     @Override
     public final boolean onTouchEvent(@NonNull MotionEvent event) {
@@ -215,7 +221,8 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                 }
                 else
                 {
-                    onSwipeEvent(m_Swipe);
+                    if(m_Swiper != null)
+                        m_Swiper.onSwipeEvent(m_Swipe);
                     Reset();
                     invalidate();
                 }
@@ -246,11 +253,11 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private void ChangeBlank()
     {
         synchronized (m_Lock) {
-            if(m_Debug)
+            if(AppController.DEBUG)
                 Log.d("MOVE", "Received as Index: " + m_LastIndex + " @ " + m_LastClickx + ", " + m_LastClicky);
             if(m_LastIndex >= 0 && m_LastIndex < 25 && m_Tiles[m_LastIndex] != BLANK_VALUE && canSlide(m_LastIndex))
             {
-                if(m_Debug)
+                if(AppController.DEBUG)
                     Log.d("MOVE", "Valid!");
 
                 m_Tiles[m_Blank]= m_Tiles[m_LastIndex];
@@ -270,7 +277,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
                 m_TimeStart = System.currentTimeMillis();
 
-                if(m_Debug) {
+                if(AppController.DEBUG) {
                     Log.i("BLANK", "Blank: " + m_Blank);
                     Log.i("BLANK", android.os.Process.myTid() + ", " + android.os.Process.myPid());
                 }
@@ -280,7 +287,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             else
             {
 
-                if(m_Debug) {
+                if(AppController.DEBUG) {
                     Log.w("INVALID CLICK", "Index: " + m_LastIndex);
                     invalidate();
                 }
@@ -376,7 +383,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
 
 
-        if(m_Debug)
+        if(AppController.DEBUG)
        canvas.drawCircle(m_LastClickx, m_LastClicky, 10.0f, m_TextPaint);
     }
 
@@ -450,21 +457,21 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             //m_TileMap = Bitmap.createBitmap((int)m_TileWidth, (int)m_TileHeight,Bitmap.Config.ARGB_8888);
 
             m_TilePaint.setShader(new BitmapShader(m_TileMap, Shader.TileMode.MIRROR, Shader.TileMode.CLAMP));
-            m_Thread = new GameThread(m_Animating, ()->m_Activity.runOnUiThread(()->invalidate()));
-            //m_Thread;
-            Executors.defaultThreadFactory().newThread(m_Thread).start();
-            while(m_Init.get() != 2)
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            invalidate();
-            for (IGameStart st : m_Starters) {
-                st.OnStart();
-            }
-            m_Starters.clear();
+            if(m_Init.incrementAndGet() == 2)
+                finishInit();
         }
+    }
+
+    private void finishInit()
+    {
+        m_Thread = new GameThread(m_Animating, ()->/*m_Activity.runOnUiThread(()->*/invalidate());
+        //m_Thread;
+        Executors.defaultThreadFactory().newThread(m_Thread).start();
+        invalidate();
+        for (IGameStart st : m_Starters) {
+            st.OnStart();
+        }
+        m_Starters.clear();
     }
 
     private boolean canSlide(int idx)
@@ -491,7 +498,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     }
 
 
-    public static int findBlank(@NonNull int[] array)
+    public static int findBlank(@NonNull byte[] array)
     {
         for(int i = 0; i < array.length; ++i)
         {
@@ -573,5 +580,10 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             }
         }
         public void Halt(){mm_Halt = true;}
+    }
+
+    public interface ISwipeHandler
+    {
+        void onSwipeEvent(int[] indexes);
     }
 }

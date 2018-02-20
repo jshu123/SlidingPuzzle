@@ -4,7 +4,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.game.team9.slidingpuzzle"
-        minSdkVersion 22
+        minSdkVersion 24
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
@@ -21,7 +21,25 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
     }
     dexOptions {
-        javaMaxHeapSize = "6g"
+        javaMaxHeapSize = "2g"
+    }
+
+    lintOptions {
+        // Turns off checks for the issue IDs you specify.
+        disable 'TypographyFractions','TypographyQuotes'
+        // Turns on checks for the issue IDs you specify. These checks are in
+        // addition to the default lint checks.
+        enable 'RtlHardcoded','RtlCompat', 'RtlEnabled'
+        // To enable checks for only a subset of issue IDs and ignore all others,
+        // list the issue IDs with the 'check' property instead. This property overrides
+        // any issue IDs you enable or disable using the properties above.
+        check 'NewApi', 'InlinedApi'
+        // If set to true, turns off analysis progress reporting by lint.
+        quiet true
+        // if set to true (default), stops the build if errors are found.
+        abortOnError false
+        // if true, only report errors.
+        ignoreWarnings true
     }
 }
 

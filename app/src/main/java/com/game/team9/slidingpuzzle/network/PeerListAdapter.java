@@ -9,76 +9,233 @@
 
 package com.game.team9.slidingpuzzle.network;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.game.team9.slidingpuzzle.AppController;
+import com.game.team9.slidingpuzzle.MathDoubleBasicActivity;
+import com.game.team9.slidingpuzzle.MathDoubleCuthroatActivity;
+import com.game.team9.slidingpuzzle.MathOnlineDiscoveryActivity;
 import com.game.team9.slidingpuzzle.R;
 
+import org.w3c.dom.Text;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+
+import static com.game.team9.slidingpuzzle.network.PeerInfo.Status.INBOUND_REQUEST_BAS;
 
 /**
  * Created on: 2/7/18
  * Author: David Hiatt - dhiatt89@gmail.com
  */
 
-public class PeerListAdapter extends ArrayAdapter<DeviceObject> {
+public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
 
-    private final List<DeviceObject> m_Devices;
+    private static final String TAG = "Peer";
 
-    public PeerListAdapter(Context context, int id, List<DeviceObject> devices) {
-        super(context,id,devices);
-        m_Devices = devices;
+    private final MathOnlineDiscoveryActivity m_Context;
+
+    public PeerListAdapter(MathOnlineDiscoveryActivity context, int id) {
+        super(context,id, PeerInfo.getPeers());
+        m_Context= context;
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Constants.ACTION_NEW_PEER);
+        LocalBroadcastManager.getInstance(m_Context).registerReceiver(m_LocalReceiver, filter);
     }
 
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         View v = convertView;
-
         if (v == null) {
-            LayoutInflater vi = (LayoutInflater) getContext().getSystemService(
-                    Context.LAYOUT_INFLATER_SERVICE);
-            v = vi.inflate(R.layout.row_device, null);
+            v = LayoutInflater.from(m_Context).inflate(R.layout.fragment_dev_detail, parent, false);
         }
-        DeviceObject device = m_Devices.get(position);
-        if (device != null) {
-            TextView top = v.findViewById(R.id.device_name);
-            TextView bottom = v.findViewById(R.id.device_details);
-            if (top != null) {
-                top.setText(device.DevName);
+        PeerInfo peer = getItem(position);
+        if(peer== null)
+            return v;
+        final String device = peer.Name;
+        final String addr = peer.Address;
+        ImageView image = v.findViewById(R.id.row_icon);
+        if(peer.Icon != -1)
+        {
+            image.setImageResource(peer.Icon);
+            image.setVisibility(View.VISIBLE);
+        }
+        else
+            image.setVisibility(View.GONE);
+
+        TextView text = v.findViewById(R.id.nameText);
+        text.setText(device);
+        text = v.findViewById(R.id.statusText);
+        text.setText(peer.Message);
+        Button connect = v.findViewById(R.id.connectButton);
+        Button decline = v.findViewById(R.id.declineButton);
+        switch (peer.Info)
+        {
+
+            case INVALID:
+                remove(peer);
+                notifyDataSetChanged();
+                return v;
+            case UNSUPPORTED:
+            {
+                connect.setEnabled(false);
+                decline.setVisibility(View.GONE);
             }
-            if (bottom != null) {
-                bottom.setText(getDeviceStatus(device.Status));
-            }
+            break;
+            case DISCOVERED:
+                if(peer.Callback == null)
+                {
+                    Log.e(TAG,"Discovered device lacks callback! - " + peer);
+                    return v;
+                }
+                else
+                {
+                    text.setText("");
+                    decline.setVisibility(View.GONE);
+                    connect.setVisibility(View.VISIBLE);
+                    connect.setEnabled(true);
+                    connect.setText(R.string.discover);
+                    connect.setOnClickListener(peer);
+                }
+                break;
+            case CONNECTING:
+                connect.setVisibility(View.VISIBLE);
+                connect.setEnabled(false);
+                decline.setVisibility(View.VISIBLE);
+                decline.setEnabled(true);
+                decline.setText(R.string.cancel);
+                decline.setOnClickListener(peer);
+            case AVAILABLE:
+                decline.setVisibility(View.GONE);
+                text.setText("");
+                connect.setText(R.string.connect);
+                connect.setVisibility(View.VISIBLE);
+                connect.setEnabled(true);
+                connect.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.REQUEST));
+                        peer.Info = PeerInfo.Status.OUTBOUND_REQUEST;
+                        notifyDataSetChanged();
+                    }
+                });
+                break;
+            case INBOUND_REQUEST_CUT:
+            case INBOUND_REQUEST_BAS:
+                Class c = peer.Info == INBOUND_REQUEST_BAS ? MathDoubleBasicActivity.class : MathDoubleCuthroatActivity.class;
+                text.setText(peer.Info == INBOUND_REQUEST_BAS ? R.string.req_bas : R.string.req_cut);
+                decline.setVisibility(View.VISIBLE);
+                decline.setEnabled(true);
+                decline.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.QUIT));
+                        peer.Info = PeerInfo.Status.DISCOVERED;
+                        notifyDataSetChanged();
+                    }
+                });
+                connect.setVisibility(View.VISIBLE);
+                connect.setEnabled(true);
+                connect.setText(R.string.accept);
+                connect.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(getContext(), c);
+                        intent.putExtra(Constants.EXTRA_ID, device);
+                        intent.putExtra(Constants.EXTRA_DEVICE, addr);
+                        intent.putExtra(Constants.EXTRA_IS_HOST, false);
+                        AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.ACCEPT));
+                        peer.Info = PeerInfo.Status.ACTIVE;
+                        notifyDataSetChanged();
+                        m_Context.LaunchGame(intent);
+                    }
+                });
+                break;
+            case OUTBOUND_REQUEST:
+                connect.setVisibility(View.VISIBLE);
+                connect.setEnabled(false);
+                decline.setVisibility(View.VISIBLE);
+                decline.setEnabled(true);
+                decline.setText(R.string.cancel);
+                decline.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        AppController.SendData(Packet.AcquirePacket(device, Packet.Header.QUIT));
+                        peer.Info = PeerInfo.Status.AVAILABLE;
+                        notifyDataSetChanged();
+                    }
+                });
+                break;
+            case ACTIVE:
+                decline.setVisibility(View.GONE);
+                connect.setEnabled(false);
+                break;
         }
 
         return v;
     }
 
-    public static String getDeviceStatus(int deviceStatus) {
-        Log.d("PEERLIST", "Peer status :" + deviceStatus);
-        switch (deviceStatus) {
-            case WifiP2pDevice.AVAILABLE:
-                return "Available";
-            case WifiP2pDevice.INVITED:
-                return "Invited";
-            case WifiP2pDevice.CONNECTED:
-                return "Connected";
-            case WifiP2pDevice.FAILED:
-                return "Failed";
-            case WifiP2pDevice.UNAVAILABLE:
-                return "Unavailable";
-            default:
-                return "Unknown";
 
+    public void Teardown()
+    {
+        LocalBroadcastManager.getInstance(m_Context).unregisterReceiver(m_LocalReceiver);
+        for(int i = 0; i < getCount(); ++i)
+        {
+            PeerInfo peer = getItem(i);
+            if (peer != null) {
+                switch(peer.Info)
+                {
+                    case ACTIVE:
+                    case AVAILABLE:
+                    case INVALID:
+                    case DISCOVERED:
+                        break;
+                    case CONNECTING:
+                        peer.Callback.onClick(null);
+                        break;
+                    case INBOUND_REQUEST_CUT:
+                    case INBOUND_REQUEST_BAS:
+                    case OUTBOUND_REQUEST:
+                        AppController.SendData(Packet.AcquirePacket(peer.Address, Packet.Header.QUIT));
+                        break;
+                }
+            }
         }
     }
+
+    private final BroadcastReceiver m_LocalReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if(action != null)
+            {
+                if(action.equals(Constants.ACTION_NEW_PEER))
+                {
+                    clear();
+                    addAll(PeerInfo.getPeers());
+                    m_Context.runOnUiThread(()->notifyDataSetChanged());
+                }
+            }
+        }
+    };
 }

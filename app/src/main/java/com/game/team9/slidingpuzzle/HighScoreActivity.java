@@ -28,11 +28,11 @@ public class HighScoreActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_high_score);
-        m_Scores[0] = findViewById(R.id.score1Text);
-        m_Scores[1] = findViewById(R.id.score2Text);
+        m_Scores[4] = findViewById(R.id.score1Text);
+        m_Scores[3] = findViewById(R.id.score2Text);
         m_Scores[2] = findViewById(R.id.score3Text);
-        m_Scores[3] = findViewById(R.id.score4Text);
-        m_Scores[4] = findViewById(R.id.score5Text);
+        m_Scores[1] = findViewById(R.id.score4Text);
+        m_Scores[0] = findViewById(R.id.score5Text);
 
         Intent intent = getIntent();
         boolean newscore = intent.getBooleanExtra("NewScore", false);

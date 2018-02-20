@@ -13,6 +13,11 @@ import android.widget.Toast;
 import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
 import com.game.team9.slidingpuzzle.database.User;
 
+import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_MODE;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_MODE;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_USER;
+
 public class MathNameActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener {
 
 
@@ -25,14 +30,14 @@ public class MathNameActivity extends AppCompatActivity implements CompoundButto
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_math_player_name);
 
-        SharedPreferences pref = getSharedPreferences("MathModeName", MODE_PRIVATE);
+        SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
         m_Name = findViewById(R.id.playerText);
-        String name = pref.getString("name", null);
+        String name = pref.getString(PREF_USER, null);
         m_Name.setText(name);
         m_Radios[0] =  findViewById(R.id.singleOpt);
         m_Radios[1] = findViewById(R.id.cutOpt);
         m_Radios[2] = findViewById(R.id.basicOpt);
-        m_Radios[pref.getInt("LastMathMode", 0)].setChecked(true);
+        m_Radios[pref.getInt(PREF_LAST_MODE, 0)].setChecked(true);
         for (RadioButton radio : m_Radios) {
             radio.setOnCheckedChangeListener(this);
         }
@@ -44,20 +49,20 @@ public class MathNameActivity extends AppCompatActivity implements CompoundButto
         String name = m_Name.getText().toString();
         if(name.length() == 0)
         {
-            Toast toast = Toast.makeText(getApplicationContext(), "Please enter a name", Toast.LENGTH_LONG);
+            Toast toast = Toast.makeText(getApplicationContext(), R.string.enter_name, Toast.LENGTH_LONG);
             toast.show();
             m_Name.requestFocus();
             return;
         }
-        SharedPreferences.Editor pref = getSharedPreferences("MathModeName", MODE_PRIVATE).edit();
+        SharedPreferences.Editor pref = getSharedPreferences(PREF, MODE_PRIVATE).edit();
         Intent intent = null;//
         for(int i = 0; i < 3; ++i)
         {
             if(m_Radios[i].isChecked())
             {
-                pref.putInt("LastMathMode", i);
+                pref.putInt(PREF_LAST_MODE, i);
                 intent = new Intent(this, m_Class[i]);
-                intent.putExtra("MODE", i);
+                intent.putExtra(EXTRA_MODE, i);
                 break;
             }
         }
@@ -65,7 +70,7 @@ public class MathNameActivity extends AppCompatActivity implements CompoundButto
         User u = new User();
 
 
-        pref.putString("name", name);
+        pref.putString(PREF_USER, name);
         pref.apply();
 
 

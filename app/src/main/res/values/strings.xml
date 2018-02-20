@@ -14,8 +14,23 @@
     <string name="highscores">High Scores</string>
     <string name="give_up">Give Up</string>
     <string name="wifi">Wifi</string>
+    <string name="wifi_label">Wifi:</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="connecting">Connecting</string>
     <string name="offline">Offline</string>
+    <string name="no_devices">No devices</string>
+    <string name="decline">Decline</string>
+    <string name="accept">Accept</string>
+    <string name="connect">Connect</string>
+    <string name="discover">Discover</string>
+    <string name="cancel">Cancel</string>
+    <string name="req_cut">They have invited you to play cutthroat mode</string>
+    <string name="req_bas">They have invited you to play basic mode</string>
+    <string name="waiting">Waiting for response</string>
+    <string name="in_progress">Game in progress</string>
+    <string name="no_devices_found">No Devices found</string>
+    <string name="bluetooth">Bluetooth:</string>
+    <string name="invalid_eq">Invalid equation.</string>
+    <string name="no_points">No points.</string>
 </resources>

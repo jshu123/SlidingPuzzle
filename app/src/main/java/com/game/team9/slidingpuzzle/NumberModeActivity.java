@@ -27,11 +27,11 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
 
         Random r = new Random();
 
-        int tiles[] = new int[25];
+        byte tiles[] = new byte[25];
 
         //Create new puzzle with random numbers
         do {
-            for (int i = 0, swap = 0; i < 25; ++i) {
+            for (byte i = 0, swap = 0; i < 25; ++i) {
                 int rand = r.nextInt(swap + 1);
                 if (rand != swap)
                     tiles[swap] = tiles[rand];
@@ -52,14 +52,24 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
                     Executors.defaultThreadFactory().newThread(m_AI_Bot).start();
                 }
             });
-            m_AI.Initialize(tiles, true);
+            m_AI.Initialize(tiles, new BaseGameView.ISwipeHandler() {
+                @Override
+                public void onSwipeEvent(int[] indexes) {
+
+                }
+            }, true);
             m_AI.AttachSolveListener(this);
         }
         else
             setContentView(R.layout.activity_number_alone_mode);
 
         m_Player = findViewById(R.id.playerView);
-        m_Player.Initialize(tiles);
+        m_Player.Initialize(tiles, new BaseGameView.ISwipeHandler() {
+            @Override
+            public void onSwipeEvent(int[] indexes) {
+
+            }
+        });
         m_Player.AttachSolveListener(this);
         m_Timer =findViewById(R.id.chronometer);
         m_Timer.start();
@@ -102,7 +112,7 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
     {
         finish();
     }
-    private static boolean isSolvable(int[] tiles)
+    private static boolean isSolvable(byte[] tiles)
     {
         int parity = 0;
         for(int i = 0; i < 24; ++i)

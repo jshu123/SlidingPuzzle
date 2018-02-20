@@ -9,19 +9,8 @@
 
 package com.game.team9.slidingpuzzle.network;
 
-import java.io.InputStream;
-
-/**
- * Created on: 2/6/18
- * Author: David Hiatt - dhiatt89@gmail.com
- */
-
-public interface IDataReceiver {
-    boolean isActive();
-    void inboundData(String ip, InputStream stream);
-    void attachNotifier(IChangeNotifier c);
-
-         interface IChangeNotifier{
-             void onChange(boolean s);
-        }
+public interface IPacketHandler extends Comparable<IPacketHandler>
+{
+    int Priority();
+    boolean handleData(Packet p);
 }
