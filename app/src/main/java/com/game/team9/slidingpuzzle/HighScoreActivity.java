@@ -21,6 +21,8 @@ import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
 import com.game.team9.slidingpuzzle.database.User;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 public class HighScoreActivity extends AppCompatActivity {
@@ -32,8 +34,9 @@ public class HighScoreActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_high_score);
         ListView hsView = (ListView)findViewById(R.id.listView);
-        ArrayList<highscore> hsList = new ArrayList<>();
-        hsListAdapter adapter = new hsListAdapter(this, R.layout.high_score_adapter, hsList);
+        List<User> list = HighScoreDatabase.getTop();
+        Collections.reverse(list);
+        hsListAdapter adapter = new hsListAdapter(this, R.layout.high_score_adapter, list);
         hsView.setAdapter(adapter);
 
         Intent intent = getIntent();
@@ -42,7 +45,7 @@ public class HighScoreActivity extends AppCompatActivity {
         {
             Toast.makeText(this, "Congradulations!", Toast.LENGTH_LONG);
         }
-        int i = 0;
+      /*  int i = 0;
         for (User user : HighScoreDatabase.getTop()) {
             {
                 String tempName = user.getName();
@@ -57,7 +60,7 @@ public class HighScoreActivity extends AppCompatActivity {
 
             highscore tmp = new highscore(i+1,"",0);
             hsList.add(tmp);
-        }
+        }*/
 
     }
 

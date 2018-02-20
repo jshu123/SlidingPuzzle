@@ -8,6 +8,8 @@ package com.game.team9.slidingpuzzle;
  * You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.game.team9.slidingpuzzle.database.User;
+
 /**
  * Created by gongb on 2/12/2018.
  */
@@ -21,6 +23,12 @@ public class highscore {
         this.index = index;
         this.name = name;
         this.score = score;
+    }
+
+    public highscore(User user)
+    {
+        name = user.getName();
+        score = user.getScore();
     }
 
     public int getIndex() {
