@@ -13,11 +13,16 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
 import com.game.team9.slidingpuzzle.database.User;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 public class HighScoreActivity extends AppCompatActivity {
@@ -28,11 +33,11 @@ public class HighScoreActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_high_score);
-        m_Scores[4] = findViewById(R.id.score1Text);
-        m_Scores[3] = findViewById(R.id.score2Text);
-        m_Scores[2] = findViewById(R.id.score3Text);
-        m_Scores[1] = findViewById(R.id.score4Text);
-        m_Scores[0] = findViewById(R.id.score5Text);
+        ListView hsView = (ListView)findViewById(R.id.listView);
+        List<User> list = HighScoreDatabase.getTop();
+        Collections.reverse(list);
+        hsListAdapter adapter = new hsListAdapter(this, R.layout.high_score_adapter, list);
+        hsView.setAdapter(adapter);
 
         Intent intent = getIntent();
         boolean newscore = intent.getBooleanExtra("NewScore", false);
@@ -40,17 +45,22 @@ public class HighScoreActivity extends AppCompatActivity {
         {
             Toast.makeText(this, "Congradulations!", Toast.LENGTH_LONG);
         }
-        int i = 0;
+      /*  int i = 0;
         for (User user : HighScoreDatabase.getTop()) {
             {
-                m_Scores[i].setText(String.valueOf(i+1) + ".\t" + user.getName() + "\t\t\t\t\t" + user.getScore());
+                String tempName = user.getName();
+                int tempScore = user.getScore();
+                highscore tmp = new highscore(i+1,tempName,tempScore);
+                hsList.add(tmp);
                 ++i;
             }
         }
         for(; i < 5;++i)
         {
-            m_Scores[i].setText(String.valueOf(i+1) + ".\t" +"---\t\t\t\t\t000");
-        }
+            highscore tmp = new highscore(i+1,"",0);
+            hsList.add(tmp);
+        }*/
+
     }
 
     public void ok_OnClicked(View view)
