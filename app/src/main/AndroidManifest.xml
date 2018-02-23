@@ -4,21 +4,19 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission
-        android:name="android.permission.CHANGE_NETWORK_STATE"
+    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"
         android:required="true" />
-    <uses-permission
-        android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"
         android:required="true"/>
-    <uses-permission
-        android:name="android.permission.ACCESS_WIFI_STATE"
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"
         android:required="true" />
-    <uses-permission
-        android:name="android.permission.CHANGE_WIFI_STATE"
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"
         android:required="true" />
-    <uses-permission
-        android:name="android.permission.INTERNET"
+    <uses-permission android:name="android.permission.INTERNET"
+        android:required="true" />
+    <uses-permission android:name="android.permission.BROADCAST_STICKY"
         android:required="true" />
 
     <application
@@ -52,6 +50,11 @@
             android:permission="" />
         <service
             android:name=".network.BluetoothService"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="" />
+        <service
+            android:name=".network.WifiService"
             android:enabled="true"
             android:exported="true"
             android:permission="" />

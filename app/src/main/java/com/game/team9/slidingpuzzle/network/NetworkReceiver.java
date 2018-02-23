@@ -13,10 +13,8 @@ import android.util.Log;
 
 import com.game.team9.slidingpuzzle.AppController;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Socket;
 
 /**
  * Created on: 2/18/18

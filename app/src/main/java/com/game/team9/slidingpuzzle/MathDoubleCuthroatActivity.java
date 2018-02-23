@@ -4,11 +4,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
-import android.widget.Chronometer;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import com.game.team9.slidingpuzzle.database.User;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -10,6 +10,7 @@
 package com.game.team9.slidingpuzzle;
 
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,7 +18,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ListView;
@@ -25,22 +25,25 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.game.team9.slidingpuzzle.network.BluetoothService;
 import com.game.team9.slidingpuzzle.network.Constants;
 import com.game.team9.slidingpuzzle.network.IPacketHandler;
 import com.game.team9.slidingpuzzle.network.Packet;
 import com.game.team9.slidingpuzzle.network.PeerInfo;
 import com.game.team9.slidingpuzzle.network.PeerListAdapter;
 import com.game.team9.slidingpuzzle.network.TestNetwork;
-import com.game.team9.slidingpuzzle.network.BluetoothService;
 import com.game.team9.slidingpuzzle.network.WifiService;
 
+import static com.game.team9.slidingpuzzle.network.Constants.ACTION_BLUE_DISABLED;
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_BLUE_UNSUPPORTED;
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_WIFI_UNSUPPORTED;
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_MODE;
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_REASON;
+import static com.game.team9.slidingpuzzle.network.Constants.REQUEST_ENABLE_BT;
 
 public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IPacketHandler {
 
+    private BluetoothAdapter m_Bluetooth;
     private PeerListAdapter m_Adapter;
     private ListView m_DevList;
 
@@ -53,6 +56,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
 
     private boolean m_WifiBound;
     private boolean m_BlueBound;
+    private boolean m_BlueWaiting;
 
     private final Object m_Lock = new Object();
 
@@ -71,6 +75,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
         setContentView(R.layout.activity_math_online_discovery);
         Intent intent = getIntent();
         m_Adapter = new PeerListAdapter(this, R.layout.fragment_dev_detail);
+
         AppController.addHandler(this);
 
         m_Class = intent.getIntExtra(EXTRA_MODE, -1) == 1 ? MathDoubleCuthroatActivity.class : MathDoubleBasicActivity.class;
@@ -83,6 +88,13 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
         m_DevList.setAdapter(m_Adapter);
 
         registerReceiver(m_LocalReceiver, m_LocalFilter);
+        m_Bluetooth = BluetoothAdapter.getDefaultAdapter();
+
+        if(m_Bluetooth == null)
+        {
+            m_Status.setText("Bluetooth not supported.  ");
+            m_Blue.setEnabled(false);
+        }
 
         if(AppController.DEBUG)
         {
@@ -92,6 +104,20 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        synchronized (m_Lock) {
+            if(m_BlueWaiting && requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK)
+            {
+                startService(new Intent(this, BluetoothService.class));
+                m_BlueBound = true;
+            } else {
+                m_Blue.setChecked(false);
+            }
+            m_BlueWaiting = false;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     private void setWifi(boolean status)
     {
@@ -113,11 +139,20 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
             if (m_BlueBound != status) {
                 if (m_BlueBound) {
                     stopService(new Intent(this, BluetoothService.class));
+                    m_BlueWaiting = false;
                 } else {
-                    startService(new Intent(this, BluetoothService.class));
+                    if(!m_Bluetooth.isEnabled()) {
+                        m_BlueWaiting = true;
+                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                    }
+                    else
+                    {
+                        startService(new Intent(this, BluetoothService.class));
+                    }
                 }
 
-                m_BlueBound = status;
+                m_BlueBound = status && !m_BlueWaiting;
             }
         }
     }
@@ -139,8 +174,10 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
     }
     private void bindAll()
     {
-        setWifi(m_Wifi.isChecked());
-        setBlue(m_Blue.isChecked());
+        if(m_Wifi.isEnabled())
+            setWifi(m_Wifi.isChecked());
+        if(m_Blue.isEnabled())
+            setBlue(m_Blue.isChecked());
     }
 
     public void onToggle(View view)
@@ -295,12 +332,16 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
             {
                 switch (action)
                 {
+                    case ACTION_BLUE_DISABLED:
+                        m_Blue.setChecked(false);
+                        bindAll();
+                        break;
                     case ACTION_BLUE_UNSUPPORTED:
                         m_Blue.setEnabled(false);
                         m_Status.setText(m_Status.getText() + "Bluetooth not supported.  ");
                         break;
                     case ACTION_WIFI_UNSUPPORTED:
-                        m_Blue.setEnabled(false);
+                        m_Wifi.setEnabled(false);
                         m_Status.setText(m_Status.getText() + intent.getStringExtra(EXTRA_REASON));
                 }
             }

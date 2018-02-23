@@ -9,17 +9,13 @@
 
 package com.game.team9.slidingpuzzle.network;
 
-import android.app.DownloadManager;
-import android.arch.paging.PageKeyedDataSource;
 import android.util.Log;
 
 import com.game.team9.slidingpuzzle.AppController;
 import com.game.team9.slidingpuzzle.BaseMathActivity;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Queue;
 import java.util.Timer;

@@ -1,8 +1,11 @@
 package com.game.team9.slidingpuzzle;
 
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 
 import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
@@ -13,15 +16,26 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            AlertDialog.Builder alert = new AlertDialog.Builder(AppController.getInstance());
+            alert.setMessage(e.getMessage()).setNeutralButton("OK",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            System.exit(0);
+                            android.os.Process.killProcess(android.os.Process.myPid());
+                        }
+                    });
+            alert.create().show();
+        });
+
         Thread.currentThread().setName("Main UI");
         HighScoreDatabase.Initialize(getApplicationContext());
         Intent intent = new Intent(this, MathModeService.class);
         startService(intent);
-        //bindService(intent, MathOnlineDiscoveryActivity.m_Conn, Context.BIND_AUTO_CREATE);
     }
 
-    public void numberOnClick(View view)
-    {
+    public void numberOnClick(View view) throws Exception {
         Intent x = new Intent(MainActivity.this, NumberModeMenuActivity.class);
         startActivity(x);
     }
@@ -40,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Intent intent = new Intent(this, MathModeService.class);
         stopService(intent);
+        Log.i("Main", "Killing database");
         HighScoreDatabase.DestroyInstance();
     }
 }

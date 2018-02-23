@@ -36,6 +36,7 @@ public class Constants {
     public static final String ACTION_WIFI_CON = "com.game.team9.slidingpuzzle.WIFICON";
     public static final String ACTION_NEW_PEER = "com.game.team9.slidingpuzzle.NEWPEER";
     public static final String ACTION_PEER_CLICK = "com.game.team9.slidingpuzzle.PEER_CLICK";
+    public static final String ACTION_BLUE_DISABLED = "com.game.team9.slidingpuzzle.BLUE_DISABLED";
     public static final String ACTION_BLUE_UNSUPPORTED = "com.game.team9.slidingpuzzle.BLUE_UNSUPPORTED";
     public static final String ACTION_WIFI_UNSUPPORTED = "com.game.team9.slidingpuzzle.WIFI_UNSUPPORTED";
 

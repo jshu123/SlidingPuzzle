@@ -9,13 +9,10 @@
 
 package com.game.team9.slidingpuzzle.network;
 
-import android.animation.TypeEvaluator;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.annotation.Retention;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 

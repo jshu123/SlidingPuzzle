@@ -9,37 +9,27 @@
 
 package com.game.team9.slidingpuzzle;
 
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorSet;
 import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
-import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
-import android.view.animation.ScaleAnimation;
-import android.view.animation.TranslateAnimation;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.database.User;
+import com.game.team9.slidingpuzzle.network.Constants;
 
 import java.util.Collections;
 import java.util.Random;
@@ -61,8 +51,8 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences a = getSharedPreferences("MathModeName", MODE_PRIVATE);
-        m_User.setName(a.getString("name", null));
+        SharedPreferences a = getSharedPreferences(Constants.PREF, MODE_PRIVATE);
+        m_User.setName(a.getString(Constants.PREF_USER, "Nobody"));
 
         m_ValAnim.setInterpolator(new AccelerateInterpolator());
         LayoutInflater inflater = getLayoutInflater();
@@ -104,7 +94,7 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
         return tiles;
     }
 
-
+/*
     private static final TimeInterpolator m_DecaySineWave = new TimeInterpolator() {
         @Override
         public float getInterpolation(float input) {
@@ -112,10 +102,10 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
             return (float)(raw * Math.exp(-input * 2f));
         }
     };
+*/
 
 
-
-
+    //The value animaitor is used to increase the view height of the toast as it moves, otherwise it will get clipped
   private final ValueAnimator m_ValAnim = ValueAnimator.ofFloat(0f,0f).setDuration(2000);
     protected void badToast(int msg)
     {
@@ -126,23 +116,19 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
         m_ValAnim.cancel();
         m_ValAnim.setCurrentFraction(0);
         m_ValAnim.removeAllUpdateListeners();
-        m_ValAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float p = animation.getAnimatedFraction();
-                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) m_ToastText.getLayoutParams();
-                params.height = (int) ((1 + p) * 2000);
-                m_ToastText.setAlpha(1f - p);
-                m_ToastText.setLayoutParams(params);
-            }
+        m_ValAnim.addUpdateListener(animation -> {
+            float p = animation.getAnimatedFraction();
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) m_ToastText.getLayoutParams();
+            params.height = (int) ((1 + p) * 2000);
+            m_ToastText.setAlpha(1f - p);
+            m_ToastText.setLayoutParams(params);
         });
+
         m_ToastText.setText(msg);
         m_ToastText.setTextColor(Color.RED);
         m_Toast.setDuration(Toast.LENGTH_SHORT);
         m_Toast.show();
-       // Animation a = new TranslateAnimation(0,200,600,0);
-      //  a.setDuration(2000);
-     //   m_ToastText.startAnimation(a);
+
         m_ToastText.startAnimation(AnimationUtils.loadAnimation(getBaseContext(), R.anim.shake));
         m_ValAnim.start();
 
@@ -155,27 +141,21 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
             m_ValAnim.cancel();
         m_ValAnim.setCurrentFraction(0);
         m_ValAnim.removeAllUpdateListeners();
-        m_ValAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float p = animation.getAnimatedFraction();
-                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) m_ToastText.getLayoutParams();
-                params.height = (int) ((1 + p) * 2000);
-                m_ToastText.setTextColor((int)m_Arg.evaluate(p, Color.GREEN, Color.BLACK));
-                m_ToastText.setAlpha(1f - p + 0.5f);
-                m_ToastText.setLayoutParams(params);
-            }
+        m_ValAnim.addUpdateListener(animation -> {
+            float p = animation.getAnimatedFraction();
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) m_ToastText.getLayoutParams();
+            params.height = (int) ((1 + p) * 2000);
+            m_ToastText.setTextColor((int)m_Arg.evaluate(p, Color.GREEN, Color.BLACK));
+            m_ToastText.setAlpha(1f - p + 0.5f);
+            m_ToastText.setLayoutParams(params);
         });
         m_ToastText.setTextColor(Color.GREEN);
         m_ToastText.setText(msg);
         m_Toast.setDuration(Toast.LENGTH_LONG);
 
-    //    Animation a = AnimationUtils.loadAnimation(getBaseContext(), R.anim.shake);
-
         m_Toast.show();
         m_ToastText.startAnimation(AnimationUtils.loadAnimation(getBaseContext(), R.anim.grow));
         m_ValAnim.start();
-  //      });
 
     }
 
@@ -372,12 +352,4 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
 
     }
 
-    private class CustomInterpolator implements Interpolator
-    {
-        @Override
-        public float getInterpolation(float input) {
-            double raw = Math.sin(3f * input * 2f * Math.PI);
-            return (float)(raw * Math.exp(-input * 2f));
-        }
-    }
 }
