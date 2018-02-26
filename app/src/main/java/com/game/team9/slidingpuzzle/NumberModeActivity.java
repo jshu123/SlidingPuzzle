@@ -2,10 +2,13 @@ package com.game.team9.slidingpuzzle;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Chronometer;
 
 import java.util.Random;
@@ -15,10 +18,10 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
 
     private NumberModeView m_Player;
     private NumberModeView m_AI;
-
+    private Button m_Pause;
     private NumberModeAI m_AI_Bot;
     private Chronometer m_Timer;
-
+    private long lastPause;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,9 +75,30 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
         });
         m_Player.AttachSolveListener(this);
         m_Timer =findViewById(R.id.chronometer);
+        m_Pause = findViewById(R.id.pauseButton);
+        m_Pause.setText("Pause");
         m_Timer.start();
+        m_Pause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String pstring = m_Pause.getText().toString();
+                if(pstring.equals("Pause")){
+                    m_Pause.setText("Resume");
+                    lastPause = SystemClock.elapsedRealtime();
+                    m_Timer.stop();
+
+                }
+                else {
+                    m_Pause.setText("Pause");
+                    m_Timer.setBase(m_Timer.getBase() + SystemClock.elapsedRealtime() - lastPause);
+                    m_Timer.start();
+                }
+            }
+        });
     }
 
+
+        //badToast(R.string.invalid_eq);
 
     @Override
     public void Solved(int id) {

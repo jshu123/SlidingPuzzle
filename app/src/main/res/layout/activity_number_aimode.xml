@@ -10,26 +10,30 @@
     <view
         android:id="@+id/playerView"
         class="com.game.team9.slidingpuzzle.NumberModeView"
-        android:layout_width="295dp"
-        android:layout_height="302dp"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="18dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/aiView"/>
 
     <view
         android:id="@+id/aiView"
         class="com.game.team9.slidingpuzzle.NumberModeView"
-        android:layout_width="295dp"
-        android:layout_height="156dp"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/playerView" />
+        app:layout_constraintTop_toBottomOf="@+id/playerView"
+        app:layout_constraintBottom_toTopOf="@+id/chronometer"
+        />
 
     <Chronometer
         android:id="@+id/chronometer"
@@ -39,9 +43,20 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@+id/pauseButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/aiView"
-        app:layout_constraintVertical_bias="0.836" />
+        />
+
+    <Button
+        android:id="@+id/pauseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/chronometer"
+         />
 </android.support.constraint.ConstraintLayout>
