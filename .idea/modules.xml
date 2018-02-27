@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SlidingTiles-GIT.iml" filepath="$PROJECT_DIR$/SlidingTiles-GIT.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SlidingPuzzle.iml" filepath="$PROJECT_DIR$/SlidingPuzzle.iml" />
+      <module fileurl="file://C:\Users\prakh\Documents\AndroidStudioProjects\SlidingPuzzle\SlidingTiles-GIT.iml" filepath="C:\Users\prakh\Documents\AndroidStudioProjects\SlidingPuzzle\SlidingTiles-GIT.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
