@@ -72,6 +72,9 @@
             </intent-filter>
         </activity>
         -->
+        <activity android:name=".WelcomeActivity" />
+        <activity android:name=".StartActivity" />
+        <activity android:name=".BeginActivity"></activity>
     </application>
 
 </manifest>
