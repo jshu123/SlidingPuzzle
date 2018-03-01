@@ -47,10 +47,12 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
 
     private byte[] m_Tiles;
 
+
     private boolean m_Started = false;
     private boolean m_Closed = false;
 
-    private AtomicBoolean m_Finalized = new AtomicBoolean(false);
+    private final AtomicBoolean m_Initialized = new AtomicBoolean(false);
+    private final AtomicBoolean m_Finalized = new AtomicBoolean(false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,13 +79,19 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         info.Update(PeerInfo.Status.ACTIVE);
         if(m_Server)
         {
+            m_Initialized.set(true);
             m_Tiles = getBoard();
-            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT, 25, m_Tiles));
+            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT,
+                    25, m_Tiles));
             startGame();
             m_Timer.start();
             m_Timer.setOnChronometerTickListener(this);
 
         }
+        else if(m_Initialized.getAndSet(true))
+            startGame();
+        else
+            Log.i(TAG, "Game init, waiting on start");
     }
 
     public void onChronometerTick(Chronometer var)
@@ -94,13 +102,15 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
 
     private synchronized void startGame()
     {
-        if(m_Started != true) {
+        if(m_Initialized.getAndSet(true)) {
             m_Started = true;
             ProgressBar bar = findViewById(R.id.progressBar);
             bar.setVisibility(View.GONE);
             m_Game.Initialize(m_Tiles, this);
             m_Game.setVisibility(View.VISIBLE);
         }
+        else
+            Log.i(TAG, "Game ready, waiting on init");
     }
 
     public boolean handleData(Packet p)

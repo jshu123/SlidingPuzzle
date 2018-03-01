@@ -9,29 +9,20 @@
 
 package com.game.team9.slidingpuzzle.network;
 
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Canvas;
+import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
-import android.telecom.Call;
 import android.util.Log;
 import android.view.View;
 
 import java.io.Serializable;
-import java.time.Period;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Stack;
+import java.util.concurrent.Callable;
 
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_NEW_PEER;
-import static com.game.team9.slidingpuzzle.network.Constants.ACTION_PEER_CLICK;
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_DEVICE;
 
 /**
@@ -45,17 +36,57 @@ public class PeerInfo implements Serializable, View.OnClickListener {
     public final String Address;
     public Status Info;
 
-    IPeerCallback Callback;
+    transient IPeerCallback Callback;
 
-    public Object Data;
+    public transient Object Data;
 
     public int Icon;
 
     public String Message;
 
+    private final Stack<PeerState> m_Stack = new Stack<>();
+
     private static final Hashtable<String, PeerInfo> s_Peers = new Hashtable<>();
 
     public static LocalBroadcastManager Broadcaster;
+
+
+    public void Pop(){
+        PeerState s = m_Stack.pop();
+        if(s != null)
+        {
+            Message = s.Message;
+            Info = s.Info;
+            Name = s.Name;
+            Data = s.Data;
+            Callback = s.Callback;
+            onUpdate(this);
+        }
+    }
+
+    public void setDiscovered(@NonNull String msg, @NonNull  IPeerCallback callback)
+    {
+        Message = msg;
+        Info = Status.DISCOVERED;
+        Callback = callback;
+        onUpdate(this);
+    }
+
+    public void setConnecting(@NonNull String msg, @NonNull IPeerCallback callback)
+    {
+        Message = msg;
+        Info = Status.CONNECTING;
+        Callback = callback;
+        onUpdate(this);
+    }
+
+    public void setUnsupported(@NonNull String msg)
+    {
+        Message = msg;
+        Info = Status.UNSUPPORTED;
+        onUpdate(this);
+    }
+
 
     public void Update(IPeerCallback callback){Update(Name, Info, callback);}
 
@@ -79,14 +110,17 @@ public class PeerInfo implements Serializable, View.OnClickListener {
 
     public void Update(String name, Status info, IPeerCallback callback)
     {
+        Log.i(TAG, "Updated " + this + " to " + Name + ": " + info);
         Name = name;
         Info = info;
         Callback = callback;
+
         onUpdate(this);
     }
 
     private static void onUpdate(PeerInfo info)
     {
+        info.m_Stack.push(new PeerState(info));
         if(Broadcaster!=null)
             Broadcaster.sendBroadcast(new Intent(ACTION_NEW_PEER).putExtra(EXTRA_DEVICE, info));
     }
@@ -128,15 +162,15 @@ public class PeerInfo implements Serializable, View.OnClickListener {
 
     public enum Status
     {
-        INVALID,
-        UNSUPPORTED,
-        DISCOVERED,
-        CONNECTING,
-        AVAILABLE,
-        INBOUND_REQUEST_CUT,
-        INBOUND_REQUEST_BAS,
-        OUTBOUND_REQUEST,
-        ACTIVE
+        INVALID,                //Peer
+        UNSUPPORTED,            //Peer found, they do not have our app
+        DISCOVERED,             //Peer found, not sure if they have app.  Must have a network handler by this point
+        CONNECTING,             //Peer found, determining if they are running the app
+        AVAILABLE,              //They are running the app too
+        INBOUND_REQUEST_CUT,    //Request to us
+        INBOUND_REQUEST_BAS,    //Request to us
+        OUTBOUND_REQUEST,   //Request sent to them
+        ACTIVE              //In a match with us
     }
 
     @Override
@@ -157,5 +191,25 @@ public class PeerInfo implements Serializable, View.OnClickListener {
     @Override
     public String toString() {
         return Name + "@" + Address + ": " + Info + "(" + Message + ")";
+    }
+
+    private static class PeerState
+    {
+        public PeerState(PeerInfo info)
+        {
+            Callback = info.Callback;
+            Info = info.Info;
+            Name = info.Name;
+            Message = info.Message;
+            Data = info.Data;
+            Icon = info.Icon;
+
+        }
+        public final IPeerCallback Callback;
+        public final Status Info;
+        public final String Name;
+        public final String Message;
+        public final Object Data;
+        public final int Icon;
     }
 }

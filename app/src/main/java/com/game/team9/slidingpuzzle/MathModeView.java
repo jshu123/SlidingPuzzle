@@ -1,12 +1,7 @@
 package com.game.team9.slidingpuzzle;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Created on: 1/30/18

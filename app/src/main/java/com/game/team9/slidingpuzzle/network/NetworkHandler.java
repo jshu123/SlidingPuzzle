@@ -16,8 +16,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Socket;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created on: 2/18/18
@@ -85,6 +83,10 @@ public class NetworkHandler implements IPacketHandler
                 m_Socket.close();
             } catch (IOException e) {
                 Log.e(TAG, "Error closing socket - " + e);
+            }
+            finally {
+                PeerInfo peer = PeerInfo.Retrieve(Id);
+                peer.Update(PeerInfo.Status.INVALID);
             }
         }
     }

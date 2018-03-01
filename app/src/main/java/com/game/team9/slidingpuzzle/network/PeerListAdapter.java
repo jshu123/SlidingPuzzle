@@ -13,11 +13,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,13 +30,6 @@ import com.game.team9.slidingpuzzle.MathDoubleBasicActivity;
 import com.game.team9.slidingpuzzle.MathDoubleCuthroatActivity;
 import com.game.team9.slidingpuzzle.MathOnlineDiscoveryActivity;
 import com.game.team9.slidingpuzzle.R;
-
-import org.w3c.dom.Text;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 import static com.game.team9.slidingpuzzle.network.PeerInfo.Status.INBOUND_REQUEST_BAS;
 
@@ -70,6 +60,7 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
             v = LayoutInflater.from(m_Context).inflate(R.layout.fragment_dev_detail, parent, false);
         }
         PeerInfo peer = getItem(position);
+        Log.i(TAG, "Adding " + peer);
         if(peer== null)
             return v;
         final String device = peer.Name;
@@ -97,11 +88,9 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 notifyDataSetChanged();
                 return v;
             case UNSUPPORTED:
-            {
                 connect.setEnabled(false);
                 decline.setVisibility(View.GONE);
-            }
-            break;
+                break;
             case DISCOVERED:
                 if(peer.Callback == null)
                 {
@@ -125,6 +114,7 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 decline.setEnabled(true);
                 decline.setText(R.string.cancel);
                 decline.setOnClickListener(peer);
+                break;
             case AVAILABLE:
                 decline.setVisibility(View.GONE);
                 text.setText("");
@@ -150,7 +140,7 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                     @Override
                     public void onClick(View v) {
                         AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.QUIT));
-                        peer.Info = PeerInfo.Status.DISCOVERED;
+                        peer.Info = PeerInfo.Status.AVAILABLE;
                         notifyDataSetChanged();
                     }
                 });
@@ -205,6 +195,8 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
             if (peer != null) {
                 switch(peer.Info)
                 {
+                    case UNSUPPORTED:
+                        break;
                     case ACTIVE:
                     case AVAILABLE:
                     case INVALID:
@@ -227,14 +219,10 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if(action != null)
-            {
-                if(action.equals(Constants.ACTION_NEW_PEER))
-                {
-                    clear();
-                    addAll(PeerInfo.getPeers());
-                    m_Context.runOnUiThread(()->notifyDataSetChanged());
-                }
+            if(action != null && action.equals(Constants.ACTION_NEW_PEER)) {
+                clear();
+                addAll(PeerInfo.getPeers());
+                m_Context.runOnUiThread(() -> notifyDataSetChanged());
             }
         }
     };

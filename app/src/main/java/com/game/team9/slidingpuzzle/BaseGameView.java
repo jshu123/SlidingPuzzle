@@ -1,6 +1,5 @@
 package com.game.team9.slidingpuzzle;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -21,7 +20,6 @@ import android.view.ViewTreeObserver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -68,6 +66,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private long m_TimeStart;
 
     private boolean m_LockedforCPU = false;
+    private boolean m_Paused = false;
 
 
     private float m_XFontOffset;
@@ -178,6 +177,8 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     @Override
     public final boolean onTouchEvent(@NonNull MotionEvent event) {
+        if(m_Paused)
+            return true;
         Log.i("MOTION", "= " + event.getAction());
         switch(event.getAction())
         {
@@ -397,6 +398,16 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
         return (Math.cos(((dt/250f) + 1f) * Math.PI) / 2.0f) + 0.5f;
     }
 
+    public void Pause()
+    {
+        m_Paused = true;
+    }
+
+    public void UnPause()
+    {
+        m_Paused = false;
+    }
+
     public void Destroy()
     {
         if(m_Thread != null)
@@ -464,9 +475,8 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     private void finishInit()
     {
-        m_Thread = new GameThread(m_Animating, ()->/*m_Activity.runOnUiThread(()->*/invalidate());
-        //m_Thread;
-        Executors.defaultThreadFactory().newThread(m_Thread).start();
+        m_Thread = new GameThread(m_Animating, this::invalidate);
+        m_Thread.start();
         invalidate();
         for (IGameStart st : m_Starters) {
             st.OnStart();
@@ -566,7 +576,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             {
                 m_Flag.set(false);
             }
-
         }
 
         public void Resume()

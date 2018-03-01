@@ -11,8 +11,6 @@ package com.game.team9.slidingpuzzle;
 
 import android.app.Application;
 import android.content.Intent;
-import android.os.Build;
-;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -40,7 +38,7 @@ import java.util.TreeSet;
 
 public class AppController extends Application implements NetworkReceiver.IDataInbound {
 
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
     private static final String TAG = "Controller";
     private static int PORT = 49152;
     private static AppController s_Instance;
@@ -97,9 +95,9 @@ public class AppController extends Application implements NetworkReceiver.IDataI
 
     private void _endGame(String id)
     {
-        NetworkHandler h = m_Listeners.remove(id);
+     /*   NetworkHandler h = m_Listeners.remove(id);
         if(h != null)
-            h.Terminate();
+            h.Terminate();*/
     }
 
     public static void SendData(Packet data) {
@@ -137,7 +135,53 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             Log.i(TAG,"Registering listener for " + h.Id);
             m_Listeners.put(h.Id, h);
             h.Start();
+            PeerInfo info = PeerInfo.Retrieve(h.Id);
+            info.Update(PeerInfo.Status.AVAILABLE);
         }
+    }
+
+    public static void bindSocket(String host, int port)
+    {
+
+        try {
+            s_Instance._bindSocket(new Socket(host, port));
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to bind to " + host + ":" + port + " - " + e);
+
+        }
+    }
+
+    public static void bindSocket(Socket s)
+    {
+        s_Instance._bindSocket(s);
+    }
+
+    private void _bindSocket(Socket s)
+    {
+        OutputStream o = null;
+        InputStream i = null;
+        String addr = s.getInetAddress().getHostAddress();
+        try {
+            o = s.getOutputStream();
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to open output stream - " + e);
+        }
+        try {
+            i = s.getInputStream();
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to open input stream - " + e);
+        }
+        if(i == null || o == null)
+        {
+            Log.e(TAG,"Failed to handle socket for " + addr);
+            try {
+                s.close();
+            } catch (IOException e) {
+                Log.e(TAG,"Failed to close socket - " + e);
+            }
+            return;
+        }
+        _AddNetwork(new NetworkHandler(s, addr, i, o));
     }
 
     @Override
@@ -145,48 +189,18 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         super.onCreate();
         s_Instance = this;
         PeerInfo.Broadcaster = LocalBroadcastManager.getInstance(getApplicationContext());
-        m_Connection = new ConListener(PORT = findPort(), new ConListener.ISocketHandler() {
-            @Override
-            public void handleSocket(Socket s) {
-                OutputStream o = null;
-                InputStream i = null;
-                String addr = s.getInetAddress().getHostAddress();
-                try {
-                    o = s.getOutputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    i = s.getInputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if(i == null || o == null)
-                {
-                    Log.e(TAG,"Failed to handle socket for " + addr);
-                    try {
-                        s.close();
-                    } catch (IOException e) {
-                        Log.e(TAG,"Failed to close socket - " + e);
-                    }
-                    return;
-                }
-                _AddNetwork(new NetworkHandler(s, addr, i, o));
-            }
-        });
+        m_Connection = new ConListener(PORT = findPort());
         m_Connection.start();
     }
 
     private static int findPort()
     {
         int p = -1;
-        try {
-            ServerSocket s = new ServerSocket(0);
-            p = s.getLocalPort();
-            if(!s.isClosed())
-                s.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try (ServerSocket s = new ServerSocket(0)) {
+                p = s.getLocalPort();
+            }
+            catch (IOException e) {
+            Log.e(TAG,"Failed to find port - " + e);
         }
         return p;
     }
@@ -201,7 +215,7 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             try {
                 m_Connection.join();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Failed to join server thread");
             }
         }
         super.onTerminate();
@@ -245,10 +259,12 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             p.Free();
                 return;
             case QUIT:
-                NetworkHandler h = m_Listeners.remove(p.Source);
+                PeerInfo peer = PeerInfo.Retrieve(p.Source);
+                peer.Update(PeerInfo.Status.AVAILABLE);
+               /* NetworkHandler h = m_Listeners.remove(p.Source);
                 if(h != null) {
                     h.Terminate();
-                }
+                }*/
                 break;
             case MOVE:
                 break;

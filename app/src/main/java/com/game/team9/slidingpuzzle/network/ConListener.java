@@ -9,9 +9,6 @@
 
 package com.game.team9.slidingpuzzle.network;
 
-import android.os.Build;
-import android.os.Bundle;
-;
 import android.util.Log;
 
 import com.game.team9.slidingpuzzle.AppController;
@@ -20,9 +17,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created on: 2/6/18
@@ -34,20 +28,12 @@ public class ConListener extends Thread {
     private static final String TAG = "Server";
     private int m_Port;
     private ServerSocket m_Server;
-    //private final DataHandler m_Receiver;
-    private final ISocketHandler m_Handler;
 
     private boolean m_Crash = false;
 
-  //  private final HashMap<Socket, NetworkReceiver> m_Listeners = new HashMap<>();
-
-    //final BlockingQueue<Bundle> m_MessageQueue = new LinkedBlockingQueue<>();
-
-    public ConListener(int p, ISocketHandler s) {
+    public ConListener(int p) {
         Log.i(TAG, "Started on port " + p);
         m_Port = p;
-        //m_Receiver = r;
-        m_Handler = s;
     }
 
     public void Close()
@@ -74,35 +60,34 @@ public class ConListener extends Thread {
                 Log.e(TAG, "Error binding server socket - " + e);
             }
         }
+        if(m_Server  != null) {
+            Socket s = null;
+            while (!m_Crash) {
+                try {
+                    s = m_Server.accept();
+                    Log.i(TAG, "Inbound request! - " + s);
 
-        Socket s = null;
-        while(!m_Crash)
-        {
-            try {
-                        s = m_Server.accept();
-                Log.i(TAG, "Inbound request! - " + s);
-                     //   NetworkReceiver n = new NetworkReceiver(s, AppController.getInstance());
-                      //  m_Listeners.put(s, n);
-                      //  n.start();
-
-                m_Handler.handleSocket(s);  //Receiver should either close socket or use it for a game.
-                    } catch (IOException e) {
-                        Log.e(TAG, "Error accepting client data - " + e);
+                    AppController.bindSocket(s);  //Receiver should either close socket or use it for a game.
+                } catch (IOException e) {
+                    Log.e(TAG, "Error accepting client data - " + e);
+                    if(s != null)
+                    {
+                        try {
+                            s.close();
+                        } catch (IOException e1) {
+                            Log.e(TAG, "Faield to close bad socket - " + e1);
+                        }
                     }
+                }
 
-        }
-      /*  m_Listeners.forEach((k,v)->{
-            v.Close();
-            try {
-                k.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Error closing client socket - " + e);
             }
-        });*/
-        Log.i(TAG, "Closed");
-    }
+            try {
+                m_Server.close();
+            } catch (IOException e) {
+                Log.e(TAG, "Failed to close server - " + e);
+            }
+        }
 
-    public interface ISocketHandler{
-        void handleSocket(Socket s);
+        Log.i(TAG, "Closed");
     }
 }

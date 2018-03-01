@@ -112,10 +112,11 @@ public class BluetoothService extends Service {
     public void onCreate() {
         super.onCreate();
         Resources res = getResources();
-        m_ConnectedIcon = res.getIdentifier("ic_bluetooth_connected_black_24dp", "drawable", this.getPackageName());
-        m_SearchingIcon = res.getIdentifier("ic_bluetooth_searching_black_24dp", "drawable", this.getPackageName());
-        m_BlueIcon = res.getIdentifier("ic_bluetooth_black_24px", "drawable", this.getPackageName());
-        m_DisabledIcon = res.getIdentifier("ic_bluetooth_disabled_black_24px", "drawable", this.getPackageName());
+        final String draw = "drawable";
+        m_ConnectedIcon = res.getIdentifier("ic_bluetooth_connected_black_24dp", draw, this.getPackageName());
+        m_SearchingIcon = res.getIdentifier("ic_bluetooth_searching_black_24dp", draw, this.getPackageName());
+        m_BlueIcon = res.getIdentifier("ic_bluetooth_black_24px", draw, this.getPackageName());
+        m_DisabledIcon = res.getIdentifier("ic_bluetooth_disabled_black_24px", draw, this.getPackageName());
     }
 
     @Nullable
@@ -164,6 +165,10 @@ public class BluetoothService extends Service {
                     m_AcceptThread = new AcceptThread();
                     m_AcceptThread.start();
                 }
+            }
+            else
+            {
+                stopSelf();
             }
         }
         else
@@ -220,7 +225,6 @@ public class BluetoothService extends Service {
             m_ConnectThread.cancel();
             m_ConnectThread = null;
         }
-        //dev.Data = (BluetoothCallback)()->{m_ConnectThread.cancel(); dev.Data = null;};
         dev.Icon = m_BlueIcon;
         dev.Update(PeerInfo.Status.CONNECTING, info -> {m_ConnectThread.cancel(); dev.Data = null;});
         m_ConnectThread = new ConnectThread((BluetoothDevice)dev.Data);
@@ -255,11 +259,10 @@ public class BluetoothService extends Service {
         }
 
         if(i != null && o != null) {
-            AppController.AddNetwork(new NetworkHandler(sock, dev.getAddress(), i, o));
             PeerInfo peer = PeerInfo.Retrieve(dev.getAddress());
             peer.Data = null;
             peer.Icon=m_ConnectedIcon;
-            peer.Update(dev.getName(), PeerInfo.Status.AVAILABLE);
+            AppController.AddNetwork(new NetworkHandler(sock, dev.getAddress(), i, o));
         }
     }
 
@@ -293,6 +296,7 @@ public class BluetoothService extends Service {
             Log.i(TAG, "Server started");
         }
 
+        @Override
         public void run() {
             setName("Bluetooth server");
             BluetoothSocket socket = null;
@@ -320,7 +324,7 @@ public class BluetoothService extends Service {
                                 try {
                                     socket.close();
                                 } catch (IOException e) {
-                                    Log.e("BLUETOOTH", "Could not close unwanted socket", e);
+                                    Log.e(TAG, "Could not close unwanted socket", e);
                                 }
                                 break;
                         }
@@ -367,6 +371,7 @@ public class BluetoothService extends Service {
 
         }
 
+        @Override
         public void run() {
             setName("Bluetooth: Connect");
             // Cancel discovery because it otherwise slows down the connection.
@@ -381,7 +386,7 @@ public class BluetoothService extends Service {
                 try {
                     mm_Socket.close();
                 } catch (IOException closeException) {
-                    Log.e("BLUETOOTH", "Could not close the client socket", closeException);
+                    Log.e(TAG, "Could not close the client socket", closeException);
                 }finally {
                     conFailed(mm_Device);
                 }
@@ -409,7 +414,7 @@ public class BluetoothService extends Service {
             try {
                 mm_Socket.close();
             } catch (IOException e) {
-                Log.e("BLUETOOTH", "Could not close the client socket", e);
+                Log.e(TAG, "Could not close the client socket", e);
             }finally {
                 conFailed(mm_Device);
             }
@@ -432,7 +437,7 @@ public class BluetoothService extends Service {
                     PeerInfo i  = PeerInfo.Retrieve(device.getAddress()); // MAC address
                     i.Icon = m_SearchingIcon;
                     i.Data = device;
-                    i.Update(device.getName(), PeerInfo.Status.DISCOVERED, info -> Connect(info));
+                    i.Update(device.getName(), PeerInfo.Status.DISCOVERED, BluetoothService.this::Connect);
                 }
                 break;
                 case ACTION_BLUETOOTH_CON:
@@ -460,6 +465,7 @@ public class BluetoothService extends Service {
                             info.Icon = m_DisabledIcon;
                             info.Update(deviceName, PeerInfo.Status.UNSUPPORTED);
                         }
+                        break;
                         case BOND_BONDING:
                         {
                             PeerInfo info = PeerInfo.Retrieve(device.getAddress());

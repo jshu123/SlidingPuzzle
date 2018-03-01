@@ -2,17 +2,15 @@ package com.game.team9.slidingpuzzle;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Bundle;
 import android.graphics.Color;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
 import com.game.team9.slidingpuzzle.database.User;
@@ -70,13 +68,14 @@ public class MathSinglePlayerActivity extends BaseMathActivity {
             m_Pause.setText("Resume");
             lastPause = SystemClock.elapsedRealtime();
             m_Timer.stop();
+            m_Game.Pause();
 
         }
         else{
             m_Pause.setText("Pause");
             m_Timer.setBase(m_Timer.getBase()+ SystemClock.elapsedRealtime()-lastPause);
             m_Timer.start();
-
+            m_Game.UnPause();
 
         }
         //badToast(R.string.invalid_eq);

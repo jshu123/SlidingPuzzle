@@ -1,9 +1,6 @@
 package com.game.team9.slidingpuzzle;
 
-import android.graphics.Color;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.Toast;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,12 +20,7 @@ public class MathDoubleBasicActivity extends BaseMathOnlineActivity {
     @Override
     protected void HandleMove(Equation q) {
         m_ClientScore += q.score;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                m_ClientScoreView.setText(m_HostScore);
-            }
-        });
+        runOnUiThread(() -> m_ClientScoreView.setText(m_HostScore));
     }
 
     @Override
@@ -41,7 +33,6 @@ public class MathDoubleBasicActivity extends BaseMathOnlineActivity {
                 idx[i] = tiles[idx[i]];
             }
             Equation eq = new Equation(idx);
-            String msg = "";
             if(eq.valid)
             {
                if(m_Host.add(eq))

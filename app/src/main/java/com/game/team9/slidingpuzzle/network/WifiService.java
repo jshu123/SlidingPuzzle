@@ -34,9 +34,6 @@ import android.util.Log;
 
 import com.game.team9.slidingpuzzle.AppController;
 import com.game.team9.slidingpuzzle.MathOnlineDiscoveryActivity;
-import com.game.team9.slidingpuzzle.network.Constants;
-import com.game.team9.slidingpuzzle.network.NetworkHandler;
-import com.game.team9.slidingpuzzle.network.PeerInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -98,7 +95,7 @@ public class WifiService extends Service {
     private WifiP2pDnsSdServiceRequest m_ServiceRequest;
     private WifiP2pServiceInfo m_ServiceInfo;
     private final ConnectivityManager m_ConManager;
-    private final WifiManager m_WifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+    private final WifiManager m_WifiManager;
     private final Object m_Lock = new Object();
     private ConnectThread m_Connect;
 
@@ -117,8 +114,8 @@ public class WifiService extends Service {
                 .addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         m_Filter
                 .addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-
-        m_ConManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        m_WifiManager = (WifiManager) AppController.getInstance().getSystemService(Context.WIFI_SERVICE);
+        m_ConManager = (ConnectivityManager) AppController.getInstance().getSystemService(Context.CONNECTIVITY_SERVICE);
         if(m_ConManager == null)
         {
             m_ErrorMessage = "No wifi found.";
@@ -134,7 +131,7 @@ public class WifiService extends Service {
                 m_ErrorMessage = "Wifi P2P not supported!  ";
                 return;
             }
-            m_Manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+            m_Manager = (WifiP2pManager) AppController.getInstance().getSystemService(Context.WIFI_P2P_SERVICE);
             if (m_Manager != null) {
 
 
@@ -143,6 +140,7 @@ public class WifiService extends Service {
                 @Override
                 public void onDnsSdServiceAvailable(String instanceName, String registrationType, WifiP2pDevice srcDevice) {
                     // A service has been discovered. Is this our app?
+                    Log.i(TAG, "Wifi service found: " + instanceName);
                     if (instanceName.equalsIgnoreCase(SERVICE_INSTANCE)) {
                         //We found a device with our game!
                         PeerInfo peer = PeerInfo.Retrieve(srcDevice.deviceAddress);
@@ -156,9 +154,12 @@ public class WifiService extends Service {
                 @Override
                 public void onGroupInfoAvailable(WifiP2pGroup group) {
                     if (group != null) {
+
+                        //AppController.bindSocket(new Socket(group.getOwner().deviceAddress, ));
                         PeerInfo info = PeerInfo.Retrieve(group.getOwner().deviceAddress);
+                        info.Message = "Peer group";
                         if (info.Info != PeerInfo.Status.UNSUPPORTED)
-                            info.Update(group.getNetworkName(), PeerInfo.Status.DISCOVERED);
+                            info.Update(group.getNetworkName(), PeerInfo.Status.UNSUPPORTED);
                         //TODO
                         Log.d("getNetworkName", group.getNetworkName());
                         Log.d(".deviceAddress", group.getOwner().deviceAddress);
@@ -182,8 +183,9 @@ public class WifiService extends Service {
                         Log.d(".getHostName", info.groupOwnerAddress.getHostName());
                         Log.d(".getCanonicalHostName", info.groupOwnerAddress.getCanonicalHostName());
                         PeerInfo peer = PeerInfo.Retrieve(info.groupOwnerAddress.getHostAddress());
+                        peer.Message = "Peer connection";
                         if (peer.Info != PeerInfo.Status.UNSUPPORTED)
-                            peer.Update(PeerInfo.Status.DISCOVERED);
+                            peer.Update(PeerInfo.Status.UNSUPPORTED);
                     }
                 }
             };
@@ -194,8 +196,9 @@ public class WifiService extends Service {
 
                     peers.getDeviceList().forEach(w -> {
                         PeerInfo peer = PeerInfo.Retrieve(w.deviceAddress);
+                        peer.Message = "Peer found";
                         if (peer.Info != PeerInfo.Status.UNSUPPORTED)
-                            peer.Update(PeerInfo.Status.DISCOVERED);
+                            peer.Update(PeerInfo.Status.UNSUPPORTED);
                     });
                 }
             };
@@ -206,14 +209,18 @@ public class WifiService extends Service {
                     PeerInfo peer = PeerInfo.Retrieve(srcDevice.deviceAddress);
                     String name = txtRecordMap.get(RECORD_USER);
                     String status = txtRecordMap.get(RECORD_STATUS);
+                    int port = Integer.getInteger(txtRecordMap.get(RECORD_PORT));
                     switch (status) {
                         case STATUS_BUSY:
                             peer.Message = "User is in a game";
                             peer.Update(name, PeerInfo.Status.UNSUPPORTED);
                             break;
                         case STATUS_DISCOVER:
-                            peer.Message = "";
-                            peer.Update(name, PeerInfo.Status.AVAILABLE);
+                            try {
+                                AppController.bindSocket(new Socket(srcDevice.deviceAddress, port));
+                            } catch (IOException e) {
+                                Log.e(TAG, "Failed to bind to " + srcDevice + " - " + e);
+                            }
                             break;
                         default:
                             peer.Message = "User does not have SlidingTiles";
@@ -289,6 +296,13 @@ public class WifiService extends Service {
             });
 
             m_ServiceRequest = WifiP2pDnsSdServiceRequest.newInstance();
+            m_Manager.setDnsSdResponseListeners(m_Channel, m_ResponseListener, m_ServiceListener);
+            m_Manager.setServiceResponseListener(m_Channel, new WifiP2pManager.ServiceResponseListener() {
+                @Override
+                public void onServiceAvailable(int protocolType, byte[] responseData, WifiP2pDevice srcDevice) {
+                    Log.d(TAG, "Service available from " + srcDevice);
+                }
+            });
             m_Manager.addServiceRequest(m_Channel, m_ServiceRequest, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
@@ -301,7 +315,7 @@ public class WifiService extends Service {
                 }
             });
 
-            m_Manager.discoverPeers(m_Channel, new WifiP2pManager.ActionListener() {
+       /*     m_Manager.discoverPeers(m_Channel, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
 
@@ -312,7 +326,7 @@ public class WifiService extends Service {
 
                 }
             });
-
+*/
             m_Manager.discoverServices(m_Channel, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
@@ -511,8 +525,6 @@ public class WifiService extends Service {
 
         if(i != null && o != null) {
             AppController.AddNetwork(new NetworkHandler(sock, peer.Address, i, o));
-           // peer.Icon=m_ConnectedIcon;
-            peer.Update(peer.Address, PeerInfo.Status.AVAILABLE);
         }
     }
 
@@ -607,7 +619,7 @@ public class WifiService extends Service {
                 {
                     WifiP2pInfo winfo = intent.getParcelableExtra(EXTRA_WIFI_P2P_INFO);
                     PeerInfo peer = PeerInfo.Retrieve(winfo.groupOwnerAddress.getHostAddress());
-                    NetworkInfo networkInfo = (NetworkInfo) intent
+                    NetworkInfo networkInfo = intent
                             .getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
                     if (networkInfo.isConnected()) {
                         // we are connected with the other device, request connection
@@ -628,7 +640,7 @@ public class WifiService extends Service {
                     m_Manager.requestConnectionInfo(m_Channel,m_ConListener);
                     break;
                 case Constants.ACTION_WIFI_CON:
-                    String d = intent.getParcelableExtra(EXTRA_DEVICE);
+                    String d = intent.getStringExtra(EXTRA_DEVICE);
                     PeerInfo peer = PeerInfo.Retrieve(d);
                     Connected(peer);
                     break;

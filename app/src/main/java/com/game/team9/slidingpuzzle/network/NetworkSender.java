@@ -11,9 +11,7 @@ package com.game.team9.slidingpuzzle.network;
 
 import android.util.Log;
 
-import java.io.IOException;
 import java.io.OutputStream;
-import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 

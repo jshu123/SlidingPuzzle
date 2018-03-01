@@ -32,6 +32,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
     private final NumberModeView m_Game;
 
     private boolean m_Stop = false;
+    private boolean m_Pause = false;
     private final AtomicBoolean m_Lock = new AtomicBoolean(false);
     @NonNull
     private ThreadStatus m_Status = ThreadStatus.NA;
@@ -115,6 +116,20 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             BoringAIThread();
     }
 
+    public void Pause()
+    {
+        m_Pause = true;
+    }
+
+    public void UnPause()
+    {
+        synchronized (m_Lock)
+        {
+            m_Pause = false;
+            m_Lock.notifyAll();
+        }
+    }
+
     private void BoringAIThread()
     {
         if(AppController.DEBUG)
@@ -132,6 +147,17 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
         int move;
         while(!m_Stop)
         {
+            synchronized (m_Lock)
+            {
+                while(m_Pause)
+                {
+                    try {
+                        m_Lock.wait(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             do {
                 move = rand.nextInt(4);
             }while(!m_Stop && !tryMove(move, last, blank));
@@ -379,7 +405,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             g=gg;
             System.arraycopy(e, 0, env, 0, e.length);
             env[f] = e[t];
-            env[t] = (byte) v;
+            env[t] = v;
             //opened = true;
             //touched = false;
             parent = null;
