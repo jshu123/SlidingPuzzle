@@ -66,6 +66,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private long m_TimeStart;
 
     private boolean m_LockedforCPU = false;
+    private boolean m_Paused = false;
 
 
     private float m_XFontOffset;
@@ -176,6 +177,8 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     @Override
     public final boolean onTouchEvent(@NonNull MotionEvent event) {
+        if(m_Paused)
+            return true;
         Log.i("MOTION", "= " + event.getAction());
         switch(event.getAction())
         {
@@ -393,6 +396,16 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
        // return 1 + (Math.pow(2, (-10 * (dt / 250f))) * Math.sin(2 * Math.PI * ((dt / 250f) - 0.3/4)));
 
         return (Math.cos(((dt/250f) + 1f) * Math.PI) / 2.0f) + 0.5f;
+    }
+
+    public void Pause()
+    {
+        m_Paused = true;
+    }
+
+    public void UnPause()
+    {
+        m_Paused = false;
     }
 
     public void Destroy()

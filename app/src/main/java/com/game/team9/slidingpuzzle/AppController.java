@@ -38,7 +38,7 @@ import java.util.TreeSet;
 
 public class AppController extends Application implements NetworkReceiver.IDataInbound {
 
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
     private static final String TAG = "Controller";
     private static int PORT = 49152;
     private static AppController s_Instance;

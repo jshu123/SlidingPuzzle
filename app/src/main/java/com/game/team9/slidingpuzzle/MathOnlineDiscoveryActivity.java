@@ -182,7 +182,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
 
     public void onToggle(View view)
     {
-        bindAll();
+        /*bindAll();*/
     }
 
 

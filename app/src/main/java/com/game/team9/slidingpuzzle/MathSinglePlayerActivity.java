@@ -68,13 +68,14 @@ public class MathSinglePlayerActivity extends BaseMathActivity {
             m_Pause.setText("Resume");
             lastPause = SystemClock.elapsedRealtime();
             m_Timer.stop();
+            m_Game.Pause();
 
         }
         else{
             m_Pause.setText("Pause");
             m_Timer.setBase(m_Timer.getBase()+ SystemClock.elapsedRealtime()-lastPause);
             m_Timer.start();
-
+            m_Game.UnPause();
 
         }
         //badToast(R.string.invalid_eq);

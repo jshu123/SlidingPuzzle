@@ -86,12 +86,22 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
                     m_Pause.setText("Resume");
                     lastPause = SystemClock.elapsedRealtime();
                     m_Timer.stop();
+                    m_Player.Pause();
+                    if(m_AI_Bot != null)
+                        m_AI_Bot.Pause();
+                   // if(m_AI != null)
+                     //   m_AI.Pause();
 
                 }
                 else {
                     m_Pause.setText("Pause");
                     m_Timer.setBase(m_Timer.getBase() + SystemClock.elapsedRealtime() - lastPause);
                     m_Timer.start();
+                    m_Player.UnPause();
+                    //if(m_AI != null)
+                    //    m_AI.UnPause();
+                    if(m_AI_Bot != null)
+                        m_AI_Bot.UnPause();
                 }
             }
         });
