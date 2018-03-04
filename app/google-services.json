@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "988396070343",
+    "firebase_url": "https://slidingpuzzle-b2478.firebaseio.com",
+    "project_id": "slidingpuzzle-b2478",
+    "storage_bucket": "slidingpuzzle-b2478.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988396070343:android:7b197a9ca2d08177",
+        "android_client_info": {
+          "package_name": "com.game.team9.slidingpuzzle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "988396070343-jps3fk3a8g7485healmr4458m8jav2qe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.game.team9.slidingpuzzle",
+            "certificate_hash": "8fbcfaf0d75c121306b94aa461596f570b2dc92c"
+          }
+        },
+        {
+          "client_id": "988396070343-06hsl393qse6o8o0uhlviu8kpcv14qn2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlriX6VcVPKfx0WNMLlgWfPd50zcPFxnw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "988396070343-06hsl393qse6o8o0uhlviu8kpcv14qn2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
