@@ -60,6 +60,7 @@ import static com.game.team9.slidingpuzzle.network.Constants.PREF_USER;
  * Author: David Hiatt - dhiatt89@gmail.com
  */
 
+@Deprecated
 public class WifiService extends Service {
 
     private static final String TAG = "Wifi";
@@ -114,7 +115,7 @@ public class WifiService extends Service {
                 .addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         m_Filter
                 .addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        m_WifiManager = (WifiManager) AppController.getInstance().getSystemService(Context.WIFI_SERVICE);
+        m_WifiManager = (WifiManager) AppController.getInstance().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         m_ConManager = (ConnectivityManager) AppController.getInstance().getSystemService(Context.CONNECTIVITY_SERVICE);
         if(m_ConManager == null)
         {
@@ -136,129 +137,111 @@ public class WifiService extends Service {
 
 
 
-            m_ResponseListener = new WifiP2pManager.DnsSdServiceResponseListener() {
-                @Override
-                public void onDnsSdServiceAvailable(String instanceName, String registrationType, WifiP2pDevice srcDevice) {
-                    // A service has been discovered. Is this our app?
-                    Log.i(TAG, "Wifi service found: " + instanceName);
-                    if (instanceName.equalsIgnoreCase(SERVICE_INSTANCE)) {
-                        //We found a device with our game!
-                        PeerInfo peer = PeerInfo.Retrieve(srcDevice.deviceAddress);
-                        if (peer.Info != PeerInfo.Status.UNSUPPORTED)
-                            peer.Update(PeerInfo.Status.AVAILABLE);
-                    }
+            m_ResponseListener = (instanceName, registrationType, srcDevice) -> {
+                // A service has been discovered. Is this our app?
+                Log.i(TAG, "Wifi service found: " + instanceName);
+                if (instanceName.equalsIgnoreCase(SERVICE_INSTANCE)) {
+                    //We found a device with our game!
+                    PeerInfo peer = PeerInfo.Retrieve(srcDevice.deviceAddress);
+                    if (peer.Info != PeerInfo.Status.UNSUPPORTED)
+                        peer.Update(PeerInfo.Status.AVAILABLE);
                 }
             };
 
-            m_GroupListener = new WifiP2pManager.GroupInfoListener() {
-                @Override
-                public void onGroupInfoAvailable(WifiP2pGroup group) {
-                    if (group != null) {
+            m_GroupListener = group -> {
+                if (group != null) {
 
-                        //AppController.bindSocket(new Socket(group.getOwner().deviceAddress, ));
-                        PeerInfo info = PeerInfo.Retrieve(group.getOwner().deviceAddress);
-                        info.Message = "Peer group";
-                        if (info.Info != PeerInfo.Status.UNSUPPORTED)
-                            info.Update(group.getNetworkName(), PeerInfo.Status.UNSUPPORTED);
-                        //TODO
-                        Log.d("getNetworkName", group.getNetworkName());
-                        Log.d(".deviceAddress", group.getOwner().deviceAddress);
-                        Log.d(".deviceName", group.getOwner().deviceName);
-                    }
+                    //AppController.bindSocket(new Socket(group.getOwner().deviceAddress, ));
+                    PeerInfo info = PeerInfo.Retrieve(group.getOwner().deviceAddress);
+                    info.Message = "Peer group";
+                    if (info.Info != PeerInfo.Status.UNSUPPORTED)
+                        info.Update(group.getNetworkName(), PeerInfo.Status.UNSUPPORTED);
+                    //TODO
+                    Log.d("getNetworkName", group.getNetworkName());
+                    Log.d(".deviceAddress", group.getOwner().deviceAddress);
+                    Log.d(".deviceName", group.getOwner().deviceName);
                 }
             };
 
-            m_ConListener = new WifiP2pManager.ConnectionInfoListener() {
-                @Override
-                public void onConnectionInfoAvailable(WifiP2pInfo info) {
-                    if (info != null && info.groupOwnerAddress != null) {
+            m_ConListener = info -> {
+                if (info != null && info.groupOwnerAddress != null) {
 //TODO
 
-                        if (info.isGroupOwner) {
+                    if (info.isGroupOwner) {
 
-                        } else {
+                    } else {
+                    }
+                    Log.d(".toString", info.groupOwnerAddress.toString());
+                    Log.d(".getHostAddress", info.groupOwnerAddress.getHostAddress());
+                    Log.d(".getHostName", info.groupOwnerAddress.getHostName());
+                    Log.d(".getCanonicalHostName", info.groupOwnerAddress.getCanonicalHostName());
+                    PeerInfo peer = PeerInfo.Retrieve(info.groupOwnerAddress.getHostAddress());
+                    peer.Message = "Peer connection";
+                    if (peer.Info != PeerInfo.Status.UNSUPPORTED)
+                        peer.Update(PeerInfo.Status.UNSUPPORTED);
+                }
+            };
+
+            m_PeerListener = peers -> {
+
+                for (WifiP2pDevice w : peers.getDeviceList()) {
+                    PeerInfo peer = PeerInfo.Retrieve(w.deviceAddress);
+                    peer.Message = "Peer found";
+                    if (peer.Info != PeerInfo.Status.UNSUPPORTED)
+                        peer.Update(PeerInfo.Status.UNSUPPORTED);
+                }
+            };
+
+            m_ServiceListener = (fullDomainName, txtRecordMap, srcDevice) -> {
+                PeerInfo peer = PeerInfo.Retrieve(srcDevice.deviceAddress);
+                String name = txtRecordMap.get(RECORD_USER);
+                String status = txtRecordMap.get(RECORD_STATUS);
+                int port = Integer.getInteger(txtRecordMap.get(RECORD_PORT));
+                switch (status) {
+                    case STATUS_BUSY:
+                        peer.Message = "User is in a game";
+                        peer.Update(name, PeerInfo.Status.UNSUPPORTED);
+                        break;
+                    case STATUS_DISCOVER:
+                        try {
+                            AppController.bindSocket(new Socket(srcDevice.deviceAddress, port));
+                        } catch (IOException e) {
+                            Log.e(TAG, "Failed to bind to " + srcDevice + " - " + e);
                         }
-                        Log.d(".toString", info.groupOwnerAddress.toString());
-                        Log.d(".getHostAddress", info.groupOwnerAddress.getHostAddress());
-                        Log.d(".getHostName", info.groupOwnerAddress.getHostName());
-                        Log.d(".getCanonicalHostName", info.groupOwnerAddress.getCanonicalHostName());
-                        PeerInfo peer = PeerInfo.Retrieve(info.groupOwnerAddress.getHostAddress());
-                        peer.Message = "Peer connection";
-                        if (peer.Info != PeerInfo.Status.UNSUPPORTED)
-                            peer.Update(PeerInfo.Status.UNSUPPORTED);
-                    }
+                        break;
+                    default:
+                        peer.Message = "User does not have SlidingTiles";
+                        peer.Update(name, PeerInfo.Status.UNSUPPORTED);
                 }
             };
 
-            m_PeerListener = new WifiP2pManager.PeerListListener() {
-                @Override
-                public void onPeersAvailable(WifiP2pDeviceList peers) {
 
-                    peers.getDeviceList().forEach(w -> {
-                        PeerInfo peer = PeerInfo.Retrieve(w.deviceAddress);
-                        peer.Message = "Peer found";
-                        if (peer.Info != PeerInfo.Status.UNSUPPORTED)
-                            peer.Update(PeerInfo.Status.UNSUPPORTED);
+
+
+        m_PeerListener = peers -> {
+            Collection<WifiP2pDevice> deviceList = peers.getDeviceList();
+            Log.d("PEERS", "PeerListListener "+ deviceList.size());
+            for (WifiP2pDevice current : deviceList) {
+                Log.d("DEVICE deviceAddress", current.deviceAddress);
+                Log.d("DEVICE deviceName", current.deviceName);
+                Log.d("primaryDeviceType", current.primaryDeviceType);
+
+                //connect
+                if (!m_Connected) {
+                    WifiP2pConfig config = new WifiP2pConfig();
+                    config.deviceAddress = current.deviceAddress;
+                    m_Manager.connect(m_Channel, config, new WifiP2pManager.ActionListener() {
+                        @Override
+                        public void onSuccess() {
+                            Log.d(TAG, "Connected  to peer - " + current);
+                            m_Connected = true;
+                        }
+
+                        @Override
+                        public void onFailure(int reason) {
+                            Log.d(TAG, "Failed to connect to peer - " + current);
+                        }
                     });
-                }
-            };
-
-            m_ServiceListener = new WifiP2pManager.DnsSdTxtRecordListener() {
-                @Override
-                public void onDnsSdTxtRecordAvailable(String fullDomainName, Map<String, String> txtRecordMap, WifiP2pDevice srcDevice) {
-                    PeerInfo peer = PeerInfo.Retrieve(srcDevice.deviceAddress);
-                    String name = txtRecordMap.get(RECORD_USER);
-                    String status = txtRecordMap.get(RECORD_STATUS);
-                    int port = Integer.getInteger(txtRecordMap.get(RECORD_PORT));
-                    switch (status) {
-                        case STATUS_BUSY:
-                            peer.Message = "User is in a game";
-                            peer.Update(name, PeerInfo.Status.UNSUPPORTED);
-                            break;
-                        case STATUS_DISCOVER:
-                            try {
-                                AppController.bindSocket(new Socket(srcDevice.deviceAddress, port));
-                            } catch (IOException e) {
-                                Log.e(TAG, "Failed to bind to " + srcDevice + " - " + e);
-                            }
-                            break;
-                        default:
-                            peer.Message = "User does not have SlidingTiles";
-                            peer.Update(name, PeerInfo.Status.UNSUPPORTED);
-                    }
-                }
-            };
-
-
-
-
-        m_PeerListener = new WifiP2pManager.PeerListListener() {
-            @Override
-            public void onPeersAvailable(WifiP2pDeviceList peers) {
-                Collection<WifiP2pDevice> deviceList = peers.getDeviceList();
-                Log.d("PEERS", "PeerListListener "+ deviceList.size());
-                for (WifiP2pDevice current : deviceList) {
-                    Log.d("DEVICE deviceAddress", current.deviceAddress);
-                    Log.d("DEVICE deviceName", current.deviceName);
-                    Log.d("primaryDeviceType", current.primaryDeviceType);
-
-                    //connect
-                    if (!m_Connected) {
-                        WifiP2pConfig config = new WifiP2pConfig();
-                        config.deviceAddress = current.deviceAddress;
-                        m_Manager.connect(m_Channel, config, new WifiP2pManager.ActionListener() {
-                            @Override
-                            public void onSuccess() {
-                                Log.d(TAG, "Connected  to peer - " + current);
-                                m_Connected = true;
-                            }
-
-                            @Override
-                            public void onFailure(int reason) {
-                                Log.d(TAG, "Failed to connect to peer - " + current);
-                            }
-                        });
-                    }
                 }
             }
         };
@@ -297,12 +280,7 @@ public class WifiService extends Service {
 
             m_ServiceRequest = WifiP2pDnsSdServiceRequest.newInstance();
             m_Manager.setDnsSdResponseListeners(m_Channel, m_ResponseListener, m_ServiceListener);
-            m_Manager.setServiceResponseListener(m_Channel, new WifiP2pManager.ServiceResponseListener() {
-                @Override
-                public void onServiceAvailable(int protocolType, byte[] responseData, WifiP2pDevice srcDevice) {
-                    Log.d(TAG, "Service available from " + srcDevice);
-                }
-            });
+            m_Manager.setServiceResponseListener(m_Channel, (protocolType, responseData, srcDevice) -> Log.d(TAG, "Service available from " + srcDevice));
             m_Manager.addServiceRequest(m_Channel, m_ServiceRequest, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {

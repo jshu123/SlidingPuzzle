@@ -85,6 +85,7 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
 
             case INVALID:
                 remove(peer);
+                Log.i(TAG, "Deleteing " + peer);
                 notifyDataSetChanged();
                 return v;
             case UNSUPPORTED:
@@ -121,14 +122,16 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 connect.setText(R.string.connect);
                 connect.setVisibility(View.VISIBLE);
                 connect.setEnabled(true);
-                connect.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.REQUEST));
-                        peer.Info = PeerInfo.Status.OUTBOUND_REQUEST;
-                        notifyDataSetChanged();
-                    }
-                });
+                connect.setOnClickListener(v14 -> AppController.getGameMode(mode->{
+                    if(mode == 0)
+                        return;
+                    Packet p = Packet.AcquirePacket(addr, Packet.Header.REQUEST);
+                    p.Length = 1;
+                    p.Data[0] = (byte)mode;
+                    AppController.SendData(p);
+                    peer.Info = PeerInfo.Status.OUTBOUND_REQUEST;
+                    notifyDataSetChanged();
+                }));
                 break;
             case INBOUND_REQUEST_CUT:
             case INBOUND_REQUEST_BAS:
@@ -136,29 +139,24 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 text.setText(peer.Info == INBOUND_REQUEST_BAS ? R.string.req_bas : R.string.req_cut);
                 decline.setVisibility(View.VISIBLE);
                 decline.setEnabled(true);
-                decline.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.QUIT));
-                        peer.Info = PeerInfo.Status.AVAILABLE;
-                        notifyDataSetChanged();
-                    }
+                decline.setText(R.string.reject);
+                decline.setOnClickListener(v13 -> {
+                    AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.QUIT));
+                    peer.Info = PeerInfo.Status.AVAILABLE;
+                    notifyDataSetChanged();
                 });
                 connect.setVisibility(View.VISIBLE);
                 connect.setEnabled(true);
                 connect.setText(R.string.accept);
-                connect.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(getContext(), c);
-                        intent.putExtra(Constants.EXTRA_ID, device);
-                        intent.putExtra(Constants.EXTRA_DEVICE, addr);
-                        intent.putExtra(Constants.EXTRA_IS_HOST, false);
-                        AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.ACCEPT));
-                        peer.Info = PeerInfo.Status.ACTIVE;
-                        notifyDataSetChanged();
-                        m_Context.LaunchGame(intent);
-                    }
+                connect.setOnClickListener(v12 -> {
+                    Intent intent = new Intent(getContext(), c);
+                    intent.putExtra(Constants.EXTRA_ID, device);
+                    intent.putExtra(Constants.EXTRA_DEVICE, addr);
+                    intent.putExtra(Constants.EXTRA_IS_HOST, false);
+                    AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.ACCEPT));
+                    peer.Info = PeerInfo.Status.ACTIVE;
+                    notifyDataSetChanged();
+                    m_Context.LaunchGame(intent);
                 });
                 break;
             case OUTBOUND_REQUEST:
@@ -167,13 +165,10 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 decline.setVisibility(View.VISIBLE);
                 decline.setEnabled(true);
                 decline.setText(R.string.cancel);
-                decline.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        AppController.SendData(Packet.AcquirePacket(device, Packet.Header.QUIT));
-                        peer.Info = PeerInfo.Status.AVAILABLE;
-                        notifyDataSetChanged();
-                    }
+                decline.setOnClickListener(v1 -> {
+                    AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.QUIT));
+                    peer.Info = PeerInfo.Status.AVAILABLE;
+                    notifyDataSetChanged();
                 });
                 break;
             case ACTIVE:

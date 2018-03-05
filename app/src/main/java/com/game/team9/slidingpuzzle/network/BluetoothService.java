@@ -37,7 +37,10 @@ import static android.bluetooth.BluetoothDevice.BOND_BONDING;
 import static android.bluetooth.BluetoothDevice.BOND_NONE;
 import static android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE;
 import static android.net.ConnectivityManager.EXTRA_REASON;
+import static com.game.team9.slidingpuzzle.network.Constants.ACTION;
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_BLUETOOTH_CON;
+import static com.game.team9.slidingpuzzle.network.Constants.ACTION_BLUE_CANCEL_DISCOVER;
+import static com.game.team9.slidingpuzzle.network.Constants.ACTION_BLUE_DISCOVER;
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_BLUE_UNSUPPORTED;
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_DEVICE;
 
@@ -45,7 +48,7 @@ import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_DEVICE;
  * Created on: 2/1/18
  * Author: David Hiatt - dhiatt89@gmail.com
  */
-
+@Deprecated
 public class BluetoothService extends Service {
 
     private static final String TAG = "BTService";
@@ -79,12 +82,12 @@ public class BluetoothService extends Service {
 
         m_Filter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
         m_Filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
-        m_Filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        m_Filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
         m_Filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         m_Filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
 
         m_Filter.addAction(ACTION_BLUETOOTH_CON);
+        m_Filter.addAction(ACTION_BLUE_DISCOVER);
+        m_Filter.addAction(ACTION_BLUE_CANCEL_DISCOVER);
         m_Filter.addAction(BluetoothDevice.ACTION_FOUND);
         m_Adapter = BluetoothAdapter.getDefaultAdapter();
         if(m_Adapter == null)
@@ -92,18 +95,6 @@ public class BluetoothService extends Service {
             synchronized (m_Lock)
             {
                 m_State = STATE.UNSUPPORTED;
-            }
-        }
-        else
-        {
-            synchronized (m_Lock)
-            {
-                if(m_State != STATE.REGISTERED)
-                {
-                    registerReceiver(m_LocalReceiver, m_Filter);
-                    m_State = STATE.REGISTERED;
-                }
-
             }
         }
     }
@@ -151,12 +142,19 @@ public class BluetoothService extends Service {
 
         if(m_Adapter != null)
         {
-            if(m_Adapter.isEnabled() || m_Adapter.enable())
+            synchronized (m_Lock)
             {
+                if(m_State != STATE.REGISTERED)
+                {
+                    registerReceiver(m_LocalReceiver, m_Filter);
+                    m_State = STATE.REGISTERED;
+                }
+
+            }
+            if (!m_Adapter.isEnabled() && !m_Adapter.enable()) {
+                stopSelf();
+            } else {
                 Log.i(TAG,"Starting discovery");
-                if (m_Adapter.isDiscovering())
-                    m_Adapter.cancelDiscovery();
-                m_Adapter.startDiscovery();
                 if (m_ConnectThread != null) {
                     m_ConnectThread.cancel();
                 }
@@ -165,10 +163,6 @@ public class BluetoothService extends Service {
                     m_AcceptThread = new AcceptThread();
                     m_AcceptThread.start();
                 }
-            }
-            else
-            {
-                stopSelf();
             }
         }
         else
@@ -428,6 +422,7 @@ public class BluetoothService extends Service {
             String action = intent.getAction();
             if(action == null)
                 return;
+            Log.i(TAG, action);
             switch (action)
             {
                 case BluetoothDevice.ACTION_FOUND:
@@ -482,10 +477,23 @@ public class BluetoothService extends Service {
                     }
 
                     break;
-
+                case ACTION_BLUE_CANCEL_DISCOVER:
+                    synchronized (m_Lock) {
+                        if (m_State != STATE.UNSUPPORTED && !m_Adapter.isDiscovering()) {
+                            m_Adapter.cancelDiscovery();
+                        }
+                    }
+                    break;
+                case ACTION_BLUE_DISCOVER:
+                    synchronized (m_Lock)
+                    {
+                        if(m_State != STATE.UNSUPPORTED && !m_Adapter.isDiscovering())
+                        {
+                            m_Adapter.startDiscovery();
+                        }
+                    }
+                break;
                 case BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED:
-                case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
-                case BluetoothAdapter.ACTION_DISCOVERY_STARTED:
                 case BluetoothAdapter.ACTION_STATE_CHANGED:
                 case BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:
                     break;

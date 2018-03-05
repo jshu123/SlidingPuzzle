@@ -11,6 +11,8 @@ package com.game.team9.slidingpuzzle.network;
 
 import android.util.Log;
 
+import com.game.team9.slidingpuzzle.AppController;
+
 import java.io.OutputStream;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,10 +24,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class NetworkSender extends Thread {
 
-    private static final String TAG = "Network";
+    private static final String TAG = "NetworkSender";
     private final String m_Addr;
     private final OutputStream m_Stream;
     private boolean m_Closed;
+
 
     public NetworkSender(String name, OutputStream o)
     {
@@ -50,19 +53,22 @@ public class NetworkSender extends Thread {
         Thread.currentThread().setName("Sender for " + m_Addr);
         Log.i(TAG, "Starting on " + m_Addr);
         Packet p = null;
+
         while(!m_Closed)
         {
             try {
                 p = m_SendQueue.take();
             } catch (InterruptedException e) {
-                Log.e(TAG, "Error taking from message queue - " + e );
+                Log.e(TAG, "Error taking from message queue - ", e );
             }
             if(p != null && p.Type != Packet.Header.FREE)
             {
-                p.sendPacket(m_Stream);
+                Log.i(TAG, "Actually sending " + p + " to " + m_Addr);
+                m_Closed = p.sendPacket(m_Stream);
                 p = null;
             }
         }
         Log.i(TAG, "Shutting down");
+        AppController.RemoveNetwork(m_Addr);
     }
 }

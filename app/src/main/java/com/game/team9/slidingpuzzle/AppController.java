@@ -10,9 +10,18 @@
 package com.game.team9.slidingpuzzle;
 
 import android.app.Application;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.network.ConListener;
 import com.game.team9.slidingpuzzle.network.Constants;
@@ -30,6 +39,10 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
+
+import static com.game.team9.slidingpuzzle.network.Constants.PREF;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_MODE;
 
 /**
  * Created on: 2/6/18
@@ -40,10 +53,11 @@ public class AppController extends Application implements NetworkReceiver.IDataI
 
     public static final boolean DEBUG = false;
     private static final String TAG = "Controller";
+    private static GameType m_GameType = GameType.UNSELECTED;
     private static int PORT = 49152;
     private static AppController s_Instance;
 
-    private ConListener m_Connection; //The main server
+    private ConListener m_Connection; //The main server for NSD
 
     private final HashMap<String, NetworkHandler> m_Listeners = new HashMap<>();
 
@@ -114,10 +128,59 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         else
             Log.w(TAG, "Cannot find handler to send " + p);
     }
+    public static void setGameMode(int t){m_GameType = t == 1 ? GameType.BASIC : GameType.CUTTHROAT;}
+    public static void getGameMode(IGameMode i)
+    {
+        s_Instance._getGameMode(i);
+    }
+
+    public interface IGameMode
+    {
+        void gameModeCallback(int mode);
+    }
+
+    private void _getGameMode(IGameMode i)
+    {
+        if(m_GameType == GameType.UNSELECTED)
+        {
+       /*     AlertDialog alertDialog = new AlertDialog.Builder(getApplicationContext()).create();
+            alertDialog.setTitle("Game Mode");
+            alertDialog.setMessage("Select a game mode.");
+
+            alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "Basic Mode", (dialog, which) -> i.gameModeCallback(1));
+
+            alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Cutthroat Mode", (dialog, which) -> i.gameModeCallback(2));
+
+            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", (dialog, which) -> i.gameModeCallback(0));
+
+            alertDialog.show();*/
+       i.gameModeCallback(0);
+        }
+        else
+        {
+            i.gameModeCallback(m_GameType == GameType.BASIC ? 1 : 2);
+        }
+    }
 
     public static AppController getInstance(){return s_Instance;}
 
     public static int getPort(){return PORT;}
+
+    public static void RemoveNetwork(String h)
+    {
+        s_Instance._RemoveNetwork(h);
+    }
+
+    private void _RemoveNetwork(String h)
+    {
+       NetworkHandler ha = m_Listeners.remove(h);
+       if(ha != null)
+       {
+           PeerInfo peer = PeerInfo.Retrieve(h);
+           peer.Update(PeerInfo.Status.INVALID);
+           ha.Terminate();
+       }
+    }
 
     public static void AddNetwork(NetworkHandler h)
     {
@@ -142,7 +205,12 @@ public class AppController extends Application implements NetworkReceiver.IDataI
 
     public static void bindSocket(String host, int port)
     {
-
+        if(s_Instance.m_Listeners.containsKey(host))
+        {
+            PeerInfo peer = PeerInfo.Retrieve(host);
+            peer.Update(PeerInfo.Status.AVAILABLE);
+            return;
+        }
         try {
             s_Instance._bindSocket(new Socket(host, port));
         } catch (IOException e) {
@@ -208,7 +276,9 @@ public class AppController extends Application implements NetworkReceiver.IDataI
 
     @Override
     public void onTerminate() {
-        m_Listeners.values().forEach(NetworkHandler::Terminate);
+        for (NetworkHandler networkHandler : m_Listeners.values()) {
+            networkHandler.Terminate();
+        }
         if(m_Connection.isAlive())
         {
             m_Connection.Close();
@@ -227,7 +297,6 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         m_Log[m_Index++] = p;
         switch (p.Type)
         {
-
             case FREE:
                 break;
             case REQUEST:
@@ -245,26 +314,10 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             }
             p.Free();
                 return;
-            case ACCEPT:
-            {
-                PeerInfo i = PeerInfo.Retrieve(p.Source);
-                Intent intent = new Intent(s_Instance, (Class)i.Data);
-                intent.putExtra(Constants.EXTRA_ID, i.Name);
-                intent.putExtra(Constants.EXTRA_DEVICE, i.Address);
-                intent.putExtra(Constants.EXTRA_IS_HOST, true);
-                startActivity(intent);
 
-            }
-            m_LastHandled++;
-            p.Free();
-                return;
             case QUIT:
                 PeerInfo peer = PeerInfo.Retrieve(p.Source);
                 peer.Update(PeerInfo.Status.AVAILABLE);
-               /* NetworkHandler h = m_Listeners.remove(p.Source);
-                if(h != null) {
-                    h.Terminate();
-                }*/
                 break;
             case MOVE:
                 break;
@@ -294,5 +347,12 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         }
         if(!handled)
             Log.w(TAG, "No game handler, ignoring packet: " + p);
+    }
+
+    public enum GameType
+    {
+        UNSELECTED,
+        BASIC,
+        CUTTHROAT
     }
 }

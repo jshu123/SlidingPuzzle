@@ -1,7 +1,5 @@
 package com.game.team9.slidingpuzzle;
 
-import android.os.Bundle;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -9,18 +7,10 @@ public class MathDoubleBasicActivity extends BaseMathOnlineActivity {
 
     private final Set<Equation> m_Host = new HashSet<>();
 
-
-
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
     @Override
     protected void HandleMove(Equation q) {
         m_ClientScore += q.score;
-        runOnUiThread(() -> m_ClientScoreView.setText(m_HostScore));
+        runOnUiThread(() -> m_ClientScoreView.setText(String.valueOf(m_ClientScore)));
     }
 
     @Override

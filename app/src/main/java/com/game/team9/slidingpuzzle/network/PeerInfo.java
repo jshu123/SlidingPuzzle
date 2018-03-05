@@ -37,6 +37,7 @@ public class PeerInfo implements Serializable, View.OnClickListener {
     public Status Info;
 
     transient IPeerCallback Callback;
+    transient IPeerCallback OnCancel;
 
     public transient Object Data;
 
@@ -87,7 +88,14 @@ public class PeerInfo implements Serializable, View.OnClickListener {
         onUpdate(this);
     }
 
+    public void setOnCancel(IPeerCallback c)
+    {
+     OnCancel = c;
+     onUpdate(this);
 
+    }
+
+    public void Update(){onUpdate(this);}
     public void Update(IPeerCallback callback){Update(Name, Info, callback);}
 
     public void Update(String name) {
@@ -139,7 +147,7 @@ public class PeerInfo implements Serializable, View.OnClickListener {
     {
 
         Address = addr;
-        Name = "Unknown";
+        Name = addr;
         Info = Status.INVALID;
         if(s_Peers.containsKey(addr))
         {
@@ -193,6 +201,16 @@ public class PeerInfo implements Serializable, View.OnClickListener {
         return Name + "@" + Address + ": " + Info + "(" + Message + ")";
     }
 
+    public void Restore(PeerState info)
+    {
+        Info = info.Info;
+        Name = info.Name;
+        Message = info.Message;
+        Data = info.Data;
+        Icon = info.Icon;
+        OnCancel = info.OnCancel;
+    }
+
     private static class PeerState
     {
         public PeerState(PeerInfo info)
@@ -203,8 +221,10 @@ public class PeerInfo implements Serializable, View.OnClickListener {
             Message = info.Message;
             Data = info.Data;
             Icon = info.Icon;
+            OnCancel = info.OnCancel;
 
         }
+        public final IPeerCallback OnCancel;
         public final IPeerCallback Callback;
         public final Status Info;
         public final String Name;

@@ -9,6 +9,7 @@
 
 package com.game.team9.slidingpuzzle.network;
 
+import android.arch.persistence.room.Database;
 import android.util.Log;
 
 import java.io.IOException;
@@ -72,10 +73,11 @@ import java.util.concurrent.LinkedBlockingQueue;
             return p;
         }
 
-        void sendPacket(OutputStream stream)
+    boolean sendPacket(OutputStream stream)
         {
+            boolean result = false;
             if(Type == Header.FREE)
-                Log.e(TAG, "Sending blank packet");
+                Log.w(TAG, "Sending blank packet");
             try {
                 stream.write(headerToByte(Type));
 
@@ -83,8 +85,10 @@ import java.util.concurrent.LinkedBlockingQueue;
                 stream.write(Data, 0, Length);
             } catch (IOException e) {
                 Log.e(TAG, "Error sending data - " + this + " - " + e);
+                result = true;
             }
            Free();
+            return result;
         }
 
         public void Free()

@@ -61,6 +61,7 @@ public class MathNameActivity extends AppCompatActivity implements CompoundButto
             if(m_Radios[i].isChecked())
             {
                 pref.putInt(PREF_LAST_MODE, i);
+                AppController.setGameMode(i);
                 intent = new Intent(this, m_Class[i]);
                 intent.putExtra(EXTRA_MODE, i);
                 break;

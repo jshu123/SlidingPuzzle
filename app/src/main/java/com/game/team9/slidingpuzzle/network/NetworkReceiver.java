@@ -22,7 +22,7 @@ import java.io.InputStream;
  */
 
 public class NetworkReceiver extends Thread {
-    protected static final String TAG = "Inbound";
+    protected static final String TAG = "NetworkReceiver";
 
     private InputStream m_Stream;
     protected final String m_Addr;
@@ -62,7 +62,6 @@ public class NetworkReceiver extends Thread {
             if(h == Packet.Header.FREE)
             {
                 m_Queue.onReceive(Packet.AcquirePacket(m_Addr, Packet.Header.QUIT));
-                //Log.w(m_Name, "Invalid header received - " + header);
                 m_Closed = true;
             }
 
@@ -89,10 +88,11 @@ public class NetworkReceiver extends Thread {
         try {
             m_Stream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Failed to close input stream", e);
         }
         finally {
             Log.i(m_Name, "Closed listener for " + m_Addr);
+            AppController.RemoveNetwork(m_Addr);
         }
     }
 

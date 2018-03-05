@@ -165,12 +165,8 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
                 }
                 else
                 {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            m_Timer.setText(new String(p.Data,0, p.Length));
-                        }
-                    });
+                    if(m_Timer != null)
+                    runOnUiThread(() -> m_Timer.setText(new String(p.Data,0, p.Length)));
                 }
                 p.Free();
                 return true;
@@ -227,12 +223,10 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
             alertDialog.setTitle("Game is over");
             alertDialog.setMessage(rmsg);
             alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(@NonNull DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            startActivity(intent);
-                            finish();
-                        }
+                    (dialog, which) -> {
+                        dialog.dismiss();
+                        startActivity(intent);
+                        finish();
                     });
             alertDialog.show();
         });
@@ -258,8 +252,6 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         AppController.endGame(m_Id);
         if(m_Timer !=null)
             m_Timer.stop();
-        if(m_Game != null)
-            m_Game.Destroy();
         PeerInfo info = PeerInfo.Retrieve(m_Id);
         info.Update(PeerInfo.Status.AVAILABLE);
     }

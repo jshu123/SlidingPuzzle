@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.game.team9.slidingpuzzle">
-
+    <uses-feature android:name="android.hardware.bluetooth" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
@@ -20,6 +20,8 @@
         android:required="true" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY"
         android:required="true" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:name=".AppController"
@@ -30,21 +32,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".SplashActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity android:name=".NumberModeMenuActivity" />
         <activity android:name=".MathSinglePlayerActivity" />
         <activity android:name=".MathDoubleBasicActivity" />
         <activity android:name=".MathDoubleCuthroatActivity" />
         <activity android:name=".NumberModeActivity" />
         <activity android:name=".MathNameActivity" />
-        <activity android:name=".MathOnlineDiscoveryActivity" />
-        <activity android:name=".MainActivity"/>
+        <activity android:name=".MathOnlineDiscoveryActivity"/>
+        <activity android:name=".SplashActivity"/>
 
         <service
             android:name=".network.MathModeService"
@@ -63,18 +58,18 @@
             android:permission="" />
 
         <activity android:name=".HighScoreActivity" />
-        <!--
-        <activity android:name=".SplashActivity">
+
+        <activity android:name=".WelcomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        -->
-        <activity android:name=".WelcomeActivity" />
+
+    <activity android:name=".MainActivity" />
         <activity android:name=".StartActivity" />
-        <activity android:name=".BeginActivity"></activity>
+        <activity android:name=".BeginActivity" />
     </application>
 
 </manifest>

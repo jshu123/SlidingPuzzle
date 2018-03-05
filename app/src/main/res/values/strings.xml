@@ -33,4 +33,9 @@
     <string name="bluetooth">Bluetooth:</string>
     <string name="invalid_eq">Invalid equation.</string>
     <string name="no_points">No points.</string>
+    <string name="enablebluetooth">Enable Bluetooth</string>
+    <string name="enablediscover">Set Discoverable</string>
+    <string name="discovererable">Discoverable</string>
+    <string name="taken">Taken by oppenent!</string>
+    <string name="reject">Reject</string>
 </resources>

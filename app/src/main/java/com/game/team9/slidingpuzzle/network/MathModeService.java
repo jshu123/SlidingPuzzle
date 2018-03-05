@@ -12,19 +12,30 @@ package com.game.team9.slidingpuzzle.network;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ServiceInfo;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.AppController;
+import com.game.team9.slidingpuzzle.MainActivity;
+import com.game.team9.slidingpuzzle.WelcomeActivity;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.game.team9.slidingpuzzle.network.Constants.PREF;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_USER;
 
 
 /***
@@ -40,23 +51,20 @@ public class MathModeService extends Service {
 
     private boolean m_Registered;
     private static final AtomicBoolean m_Registering = new AtomicBoolean(false);
+    private static final Object m_Lock = new Object();
 
 
+    private String m_Name;
     private final String m_UniqueName;
     private NsdManager.DiscoveryListener m_DiscoveryListener;
     private NsdManager.ResolveListener m_ResolveListener;
     private NsdManager.RegistrationListener m_RegListener;
 
-    private PeerInfo.IPeerCallback m_OnResolve;
-    private PeerInfo.IPeerCallback m_OnDiscovered;
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     public MathModeService() {
         m_UniqueName = SERVICE_NAME + String.valueOf(new Random().nextInt(100));
-        m_OnResolve = info-> {
-            info.setConnecting("Resolving..", m_OnDiscovered);
-            m_NsdManager.resolveService((NsdServiceInfo)info.Data, m_ResolveListener);
-        };
-        m_OnDiscovered = info -> info.setDiscovered("Found service, click to resolve.", m_OnResolve);
     }
     @Override
     public void onCreate() {
@@ -69,7 +77,7 @@ public class MathModeService extends Service {
             @Override
             public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 m_Registered= false;
-                m_NsdManager = null;
+                //m_NsdManager = null;
                 Log.e(TAG, "Registration failed - " + errorCode);
                 m_Registering.lazySet(false);
             }
@@ -84,6 +92,7 @@ public class MathModeService extends Service {
             @Override
             public void onServiceRegistered(NsdServiceInfo serviceInfo) {
                 m_Registered= true;
+                mAuth.addAuthStateListener(mAuthListener);
                 Log.i(TAG, "Registered ");
                 m_NsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, m_DiscoveryListener);
                 m_Registering.lazySet(false);
@@ -92,8 +101,9 @@ public class MathModeService extends Service {
             @Override
             public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
                 m_Registered= false;
+                mAuth.removeAuthStateListener(mAuthListener);
                 Log.i(TAG, "Unregistered ");
-                m_NsdManager = null;
+                //m_NsdManager = null;
                 m_Registering.lazySet(false);
             }
         };
@@ -122,20 +132,21 @@ public class MathModeService extends Service {
             @Override
             public void onServiceFound(NsdServiceInfo serviceInfo) {
                 Log.i(TAG, "Found service: " + serviceInfo.getServiceName() + " @ "+ serviceInfo.getServiceType() + " (" + serviceInfo.getHost() + ", " + serviceInfo.getPort() + ")");
-                if(serviceInfo.getServiceType().startsWith(SERVICE_TYPE) && !serviceInfo.getServiceName().equals(m_UniqueName)) {
-                    PeerInfo peer = PeerInfo.Retrieve(serviceInfo.getHost().getHostAddress());
-                    peer.Data = serviceInfo;
-                    peer.setDiscovered("Found service, click to resolve.", m_OnResolve);
+                if(serviceInfo.getServiceType().startsWith(SERVICE_TYPE) && !serviceInfo.getServiceName().equals(m_Name)) {
+                    m_NsdManager.resolveService(serviceInfo, m_ResolveListener);
                 }
             }
 
             @Override
             public void onServiceLost(NsdServiceInfo serviceInfo) {
                 Log.i(TAG, "Lost service: " + serviceInfo.getServiceName() + " @ "+ serviceInfo.getServiceType());
-                if(serviceInfo.getServiceType().startsWith(SERVICE_TYPE) && !serviceInfo.getServiceName().equals(m_UniqueName)) {
-                    PeerInfo peer = PeerInfo.Retrieve(serviceInfo.getHost().getHostAddress());
-                    peer.Data = null;
-                    peer.setUnsupported("Service has been lost");
+                if(serviceInfo.getServiceType().startsWith(SERVICE_TYPE) && !serviceInfo.getServiceName().equals(m_Name)) {
+                    InetAddress addr = serviceInfo.getHost();
+                    if (addr != null)
+                    {
+                        PeerInfo peer = PeerInfo.Retrieve(addr.getHostAddress());
+                        peer.Update(PeerInfo.Status.INVALID);
+                    }
                 }
             }
         };
@@ -144,17 +155,29 @@ public class MathModeService extends Service {
             @Override
             public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 Log.i(TAG, "Failed to resolve (" + errorCode + "): " + serviceInfo );
-                PeerInfo peer = PeerInfo.Retrieve(serviceInfo.getHost().getHostAddress());
-                peer.setUnsupported("Failed to resolve host.");
             }
 
             @Override
             public void onServiceResolved(NsdServiceInfo serviceInfo) {
                 Log.i(TAG, "Resolved "  + serviceInfo );
-                AppController.bindSocket(serviceInfo.getHost().getHostAddress(), serviceInfo.getPort());
+                InetAddress addr = serviceInfo.getHost();
+
+                if(addr != null)
+                {
+                    PeerInfo peer = PeerInfo.Retrieve(addr.getHostAddress());
+                    peer.Name =serviceInfo.getServiceName();
+                    AppController.bindSocket(serviceInfo.getHost().getHostAddress(), serviceInfo.getPort());
+                }
             }
         };
 
+
+        mAuth = FirebaseAuth.getInstance();
+        mAuthListener = firebaseAuth -> {
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            if(user != null && m_Registered && !user.getDisplayName().equals(m_Name))
+                Reset(user.getDisplayName());
+        };
     }
 
 
@@ -162,8 +185,30 @@ public class MathModeService extends Service {
     public void onDestroy() {
         super.onDestroy();
         if(m_Registered)
+        {
             m_NsdManager.unregisterService(m_RegListener);
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
         Log.i(TAG, "Destroyed");
+    }
+
+    private void Reset(String name)
+    {
+        NsdServiceInfo serviceInfo = new NsdServiceInfo();
+        serviceInfo.setServiceName(name);
+        serviceInfo.setServiceType(SERVICE_TYPE);
+        serviceInfo.setPort(AppController.getPort());
+        synchronized (m_Lock)
+        {
+            if(m_Name != null)
+            {
+                m_NsdManager.unregisterService(m_RegListener);
+                Log.i(TAG, "Stopping " + m_Name);
+            }
+            m_Name = name;
+            m_NsdManager.registerService(serviceInfo,NsdManager.PROTOCOL_DNS_SD, m_RegListener);
+        }
+        Log.i(TAG, "Started as " + m_Name);
     }
 
     @Nullable
@@ -174,16 +219,9 @@ public class MathModeService extends Service {
 
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-        NsdServiceInfo serviceInfo = new NsdServiceInfo();
-
-        // The name is subject to change based on conflicts
-        // with other services advertised on the same network.
-        serviceInfo.setServiceName(m_UniqueName);
-        serviceInfo.setServiceType(SERVICE_TYPE);
-        serviceInfo.setPort(AppController.getPort());
-
-        m_NsdManager.registerService(serviceInfo,NsdManager.PROTOCOL_DNS_SD, m_RegListener);
-        Log.i(TAG, "Started");
+        SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        Reset(user != null ? user.getDisplayName() : pref.getString(PREF_USER, m_UniqueName));
         return START_STICKY;
     }
 }

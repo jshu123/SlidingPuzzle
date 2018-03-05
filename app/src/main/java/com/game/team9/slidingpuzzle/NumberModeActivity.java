@@ -134,10 +134,6 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
         super.onDestroy();
         if(m_AI_Bot != null)
             m_AI_Bot.Solved(0);
-        if(m_AI != null)
-            m_AI.Destroy();
-        if(m_Player != null)
-            m_Player.Destroy();
         if(m_Timer != null)
             m_Timer.stop();
     }

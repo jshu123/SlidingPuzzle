@@ -27,7 +27,6 @@ public class MathSinglePlayerActivity extends BaseMathActivity {
     private MathModeView m_Game;
     private Chronometer m_Timer;
     private long lastPause;
-    private byte[] m_Tiles;
 
     private final Set<Equation> m_Hist = new HashSet<>();
 
@@ -112,8 +111,6 @@ public class MathSinglePlayerActivity extends BaseMathActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(m_Game != null)
-            m_Game.Destroy();
         if(m_Timer !=null)
             m_Timer.stop();
     }
