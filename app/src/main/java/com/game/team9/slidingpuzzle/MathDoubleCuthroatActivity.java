@@ -4,11 +4,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
-import android.widget.Chronometer;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import com.game.team9.slidingpuzzle.database.User;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,21 +16,10 @@ public class MathDoubleCuthroatActivity extends BaseMathOnlineActivity {
     private final Set<Equation> m_Client = new HashSet<>();
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
-    }
-
-
-    @Override
     protected void HandleMove(Equation q) {
         m_ClientScore += q.score;
         m_Client.add(q);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                m_ClientScoreView.setText(m_HostScore);
-            }
-        });
+        runOnUiThread(() -> m_ClientScoreView.setText(Integer.toString(m_ClientScore)));
     }
 
     @Override
@@ -47,14 +32,13 @@ public class MathDoubleCuthroatActivity extends BaseMathOnlineActivity {
                 idx[i] = tiles[idx[i]];
             }
             Equation eq = new Equation(idx);
-            String msg = "";
             if(eq.valid)
             {
                 if(m_Client.contains(eq))
                 {
                     m_Toast.setDuration(Toast.LENGTH_SHORT);
                     m_ToastText.setTextColor(Color.RED);
-                    msg = "Taken by oppenent!";
+                    badToast(R.string.taken);
                 }
                 else if(m_Host.add(eq))
                 {

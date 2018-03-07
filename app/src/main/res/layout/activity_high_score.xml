@@ -31,10 +31,19 @@
         android:layout_weight="80"
         android:id='@+id/listView'/>
 
+    <TextView
+        android:id="@+id/emptyView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="80"
+        android:textAlignment="center"
+        android:textSize="35sp"
+        android:text="@string/no_high_scores"/>
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="5"
+        android:layout_weight="1"
         android:onClick="ok_OnClicked"
         android:text="@android:string/ok" />
 

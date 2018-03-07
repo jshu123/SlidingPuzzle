@@ -9,13 +9,11 @@
 
 package com.game.team9.slidingpuzzle.network;
 
-import android.animation.TypeEvaluator;
-import android.support.v4.content.LocalBroadcastManager;
+import android.arch.persistence.room.Database;
 import android.util.Log;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.annotation.Retention;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -75,10 +73,11 @@ import java.util.concurrent.LinkedBlockingQueue;
             return p;
         }
 
-        void sendPacket(OutputStream stream)
+    boolean sendPacket(OutputStream stream)
         {
+            boolean result = false;
             if(Type == Header.FREE)
-                Log.e(TAG, "Sending blank packet");
+                Log.w(TAG, "Sending blank packet");
             try {
                 stream.write(headerToByte(Type));
 
@@ -86,8 +85,10 @@ import java.util.concurrent.LinkedBlockingQueue;
                 stream.write(Data, 0, Length);
             } catch (IOException e) {
                 Log.e(TAG, "Error sending data - " + this + " - " + e);
+                result = true;
             }
            Free();
+            return result;
         }
 
         public void Free()
@@ -145,7 +146,7 @@ import java.util.concurrent.LinkedBlockingQueue;
         String ret = Type.toString();
         if(Length > 0)
         {
-            ret += ":";
+            ret += ":"+ Length + ":";
             for(int i = 0; i < Length; ++i)
             {
                 ret += " " + Data[i];

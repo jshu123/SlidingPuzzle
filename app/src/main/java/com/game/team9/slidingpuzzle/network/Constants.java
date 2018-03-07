@@ -31,11 +31,15 @@ public class Constants {
     public static final String ACTION_SEND_REJECT = "com.game.team9.slidingpuzzle.REJECT";
     public static final String ACTION_SEND_ACCEPT = "com.game.team9.slidingpuzzle.ACCEPT";
 
+    public static final String ACTION_NAME_CHANGE = "com.game.team9.slidingpuzzle.NAMECHANGE";
     public static final String ACTION_BLUETOOTH_STOP = "com.game.team9.slidingpuzzle.BLUESTOP";
     public static final String ACTION_BLUETOOTH_CON = "com.game.team9.slidingpuzzle.BLUECON";
     public static final String ACTION_WIFI_CON = "com.game.team9.slidingpuzzle.WIFICON";
     public static final String ACTION_NEW_PEER = "com.game.team9.slidingpuzzle.NEWPEER";
     public static final String ACTION_PEER_CLICK = "com.game.team9.slidingpuzzle.PEER_CLICK";
+    public static final String ACTION_BLUE_DISCOVER = "com.game.team9.slidingpuzzle.BLUE_DISCOVER";
+    public static final String ACTION_BLUE_CANCEL_DISCOVER = "com.game.team9.slidingpuzzle.BLUE_CANCEL_DISCOVER";
+    public static final String ACTION_BLUE_DISABLED = "com.game.team9.slidingpuzzle.BLUE_DISABLED";
     public static final String ACTION_BLUE_UNSUPPORTED = "com.game.team9.slidingpuzzle.BLUE_UNSUPPORTED";
     public static final String ACTION_WIFI_UNSUPPORTED = "com.game.team9.slidingpuzzle.WIFI_UNSUPPORTED";
 
@@ -64,6 +68,8 @@ public class Constants {
     public static final String PREF = "MathModeName";
     public static final String PREF_USER = "name";
     public static final String PREF_LAST_MODE = "MathLastMode";
+    public static final String PREF_LAST_GAME = "MathLastGame";
+    public static final String PREF_LAST_ONLINE_MODE = "MathLastOnlineMode";
 
 
     public static final int HEADER_NULL = 0;

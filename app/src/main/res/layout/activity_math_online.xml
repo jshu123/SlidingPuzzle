@@ -15,65 +15,117 @@
     android:layout_height="match_parent"
     tools:context="com.game.team9.slidingpuzzle.MathSinglePlayerActivity">
 
-    <Chronometer
-        android:id="@+id/chronometer"
-        android:layout_width="100dp"
-        android:layout_height="32dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1"
-        android:background="@android:color/holo_blue_light"
-        android:gravity="center"
-        android:textSize="22sp"
-        app:layout_constraintEnd_toStartOf="@+id/hostScoreText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/highscoreButton"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1"
-        android:onClick="onHighscoreClicked"
-        android:text="@string/highscore"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/hostScoreText"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="136dp"
-        android:layout_marginTop="48dp"
-        android:layout_weight="1"
-        android:background="@android:color/holo_green_light"
-        android:gravity="center"
-        android:textSize="22sp"
-        android:visibility="visible"
-        app:layout_constraintEnd_toStartOf="@+id/highscoreButton"
-        app:layout_constraintTop_toTopOf="parent" />
+        <Chronometer
+            android:id="@+id/chronometer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="44dp"
+            android:layout_weight="1"
+            android:background="@android:color/holo_blue_light"
+            android:gravity="center"
+            android:textSize="22sp"
+            app:layout_constraintBottom_toTopOf="@+id/playerView"
+            app:layout_constraintEnd_toStartOf="@+id/hostScoreText"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/clientScoreText"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:layout_weight="1"
-        android:background="@android:color/holo_green_light"
-        android:gravity="center"
-        android:textSize="22sp"
-        android:visibility="visible"
-        app:layout_constraintEnd_toStartOf="@+id/highscoreButton"
-        app:layout_constraintTop_toTopOf="parent" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/hostNameText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                app:layout_constraintBottom_toTopOf="@+id/hostScoreText"
+                app:layout_constraintEnd_toEndOf="@+id/hostScoreText"
+                app:layout_constraintStart_toStartOf="@+id/hostScoreText"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.421" />
+
+            <TextView
+                android:id="@+id/hostScoreText"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:background="@android:color/holo_green_light"
+                android:gravity="center"
+                android:textSize="22sp"
+                android:visibility="visible"
+                app:layout_constraintBottom_toTopOf="@+id/playerView"
+                app:layout_constraintEnd_toStartOf="@+id/clientScoreText"
+                app:layout_constraintStart_toEndOf="@+id/chronometer"
+                app:layout_constraintTop_toBottomOf="@+id/hostNameText" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/clientNameText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                app:layout_constraintBottom_toTopOf="@+id/clientScoreText"
+                app:layout_constraintEnd_toEndOf="@+id/clientScoreText"
+                app:layout_constraintStart_toStartOf="@+id/clientScoreText"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.38" />
+
+            <TextView
+                android:id="@+id/clientScoreText"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:background="@android:color/holo_green_light"
+                android:gravity="center"
+                android:textSize="22sp"
+                android:visibility="visible"
+                app:layout_constraintBottom_toTopOf="@+id/playerView"
+                app:layout_constraintEnd_toStartOf="@+id/highscoreButton"
+                app:layout_constraintHorizontal_bias="0.48"
+                app:layout_constraintStart_toEndOf="@+id/hostScoreText"
+                app:layout_constraintTop_toBottomOf="@+id/clientNameText" />
+
+        </LinearLayout>
+    </LinearLayout>
 
     <Button
         android:id="@+id/giveupButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="52dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
@@ -81,47 +133,40 @@
         android:onClick="onGiveupClicked"
         android:text="@string/give_up"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/highscoreButton"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playerView" />
+
+    <Button
+        android:id="@+id/highscoreButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:onClick="onHighscoreClicked"
+        android:text="@string/highscore"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/giveupButton"
         app:layout_constraintTop_toBottomOf="@+id/playerView" />
 
     <view
         android:id="@+id/playerView"
         class="com.game.team9.slidingpuzzle.MathModeView"
-        android:visibility="invisible"
         android:layout_width="314dp"
         android:layout_height="314dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/giveupButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/highscoreButton" />
-
-    <TextView
-        android:id="@+id/hostNameText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/hostScoreText"
-        app:layout_constraintEnd_toStartOf="@+id/clientNameText"
-        app:layout_constraintStart_toEndOf="@+id/chronometer"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/clientNameText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="48dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/clientScoreText"
-        app:layout_constraintEnd_toStartOf="@+id/highscoreButton"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -137,12 +182,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-    <TextView
-        android:id="@+id/floatingText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="@style/FloatingText"
-        android:visibility="gone"/>
 
 </android.support.constraint.ConstraintLayout>

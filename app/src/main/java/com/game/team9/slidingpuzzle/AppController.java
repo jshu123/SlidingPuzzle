@@ -10,11 +10,18 @@
 package com.game.team9.slidingpuzzle;
 
 import android.app.Application;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
-;
+import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.network.ConListener;
 import com.game.team9.slidingpuzzle.network.Constants;
@@ -32,6 +39,11 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
+
+import static com.game.team9.slidingpuzzle.network.Constants.PREF;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_MODE;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ONLINE_MODE;
 
 /**
  * Created on: 2/6/18
@@ -42,10 +54,11 @@ public class AppController extends Application implements NetworkReceiver.IDataI
 
     public static final boolean DEBUG = false;
     private static final String TAG = "Controller";
+    private static GameType m_GameType = GameType.UNSELECTED;
     private static int PORT = 49152;
     private static AppController s_Instance;
 
-    private ConListener m_Connection; //The main server
+    private ConListener m_Connection; //The main server for NSD
 
     private final HashMap<String, NetworkHandler> m_Listeners = new HashMap<>();
 
@@ -97,9 +110,9 @@ public class AppController extends Application implements NetworkReceiver.IDataI
 
     private void _endGame(String id)
     {
-        NetworkHandler h = m_Listeners.remove(id);
+     /*   NetworkHandler h = m_Listeners.remove(id);
         if(h != null)
-            h.Terminate();
+            h.Terminate();*/
     }
 
     public static void SendData(Packet data) {
@@ -116,10 +129,36 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         else
             Log.w(TAG, "Cannot find handler to send " + p);
     }
+    public static int getGameMode()
+    {
+        return s_Instance._getGameMode();
+    }
+
+    private int _getGameMode()
+    {
+        SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
+        return pref.getString(PREF_LAST_ONLINE_MODE, "BASIC").equals("BASIC") ? 0 : 1;
+    }
 
     public static AppController getInstance(){return s_Instance;}
 
     public static int getPort(){return PORT;}
+
+    public static void RemoveNetwork(String h)
+    {
+        s_Instance._RemoveNetwork(h);
+    }
+
+    private void _RemoveNetwork(String h)
+    {
+       NetworkHandler ha = m_Listeners.remove(h);
+       if(ha != null)
+       {
+           PeerInfo peer = PeerInfo.Retrieve(h);
+           peer.Update(PeerInfo.Status.INVALID);
+           ha.Terminate();
+       }
+    }
 
     public static void AddNetwork(NetworkHandler h)
     {
@@ -137,7 +176,58 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             Log.i(TAG,"Registering listener for " + h.Id);
             m_Listeners.put(h.Id, h);
             h.Start();
+            PeerInfo info = PeerInfo.Retrieve(h.Id);
+            info.Update(PeerInfo.Status.AVAILABLE);
         }
+    }
+
+    public static void bindSocket(String host, int port)
+    {
+        if(s_Instance.m_Listeners.containsKey(host))
+        {
+            PeerInfo peer = PeerInfo.Retrieve(host);
+            peer.Update(PeerInfo.Status.AVAILABLE);
+            return;
+        }
+        try {
+            s_Instance._bindSocket(new Socket(host, port));
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to bind to " + host + ":" + port + " - " + e);
+
+        }
+    }
+
+    public static void bindSocket(Socket s)
+    {
+        s_Instance._bindSocket(s);
+    }
+
+    private void _bindSocket(Socket s)
+    {
+        OutputStream o = null;
+        InputStream i = null;
+        String addr = s.getInetAddress().getHostAddress();
+        try {
+            o = s.getOutputStream();
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to open output stream - " + e);
+        }
+        try {
+            i = s.getInputStream();
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to open input stream - " + e);
+        }
+        if(i == null || o == null)
+        {
+            Log.e(TAG,"Failed to handle socket for " + addr);
+            try {
+                s.close();
+            } catch (IOException e) {
+                Log.e(TAG,"Failed to close socket - " + e);
+            }
+            return;
+        }
+        _AddNetwork(new NetworkHandler(s, addr, i, o));
     }
 
     @Override
@@ -145,48 +235,18 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         super.onCreate();
         s_Instance = this;
         PeerInfo.Broadcaster = LocalBroadcastManager.getInstance(getApplicationContext());
-        m_Connection = new ConListener(PORT = findPort(), new ConListener.ISocketHandler() {
-            @Override
-            public void handleSocket(Socket s) {
-                OutputStream o = null;
-                InputStream i = null;
-                String addr = s.getInetAddress().getHostAddress();
-                try {
-                    o = s.getOutputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    i = s.getInputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if(i == null || o == null)
-                {
-                    Log.e(TAG,"Failed to handle socket for " + addr);
-                    try {
-                        s.close();
-                    } catch (IOException e) {
-                        Log.e(TAG,"Failed to close socket - " + e);
-                    }
-                    return;
-                }
-                _AddNetwork(new NetworkHandler(s, addr, i, o));
-            }
-        });
+        m_Connection = new ConListener(PORT = findPort());
         m_Connection.start();
     }
 
     private static int findPort()
     {
         int p = -1;
-        try {
-            ServerSocket s = new ServerSocket(0);
-            p = s.getLocalPort();
-            if(!s.isClosed())
-                s.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try (ServerSocket s = new ServerSocket(0)) {
+                p = s.getLocalPort();
+            }
+            catch (IOException e) {
+            Log.e(TAG,"Failed to find port - " + e);
         }
         return p;
     }
@@ -194,14 +254,16 @@ public class AppController extends Application implements NetworkReceiver.IDataI
 
     @Override
     public void onTerminate() {
-        m_Listeners.values().forEach(NetworkHandler::Terminate);
+        for (NetworkHandler networkHandler : m_Listeners.values()) {
+            networkHandler.Terminate();
+        }
         if(m_Connection.isAlive())
         {
             m_Connection.Close();
             try {
                 m_Connection.join();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Failed to join server thread");
             }
         }
         super.onTerminate();
@@ -213,7 +275,6 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         m_Log[m_Index++] = p;
         switch (p.Type)
         {
-
             case FREE:
                 break;
             case REQUEST:
@@ -231,24 +292,10 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             }
             p.Free();
                 return;
-            case ACCEPT:
-            {
-                PeerInfo i = PeerInfo.Retrieve(p.Source);
-                Intent intent = new Intent(s_Instance, (Class)i.Data);
-                intent.putExtra(Constants.EXTRA_ID, i.Name);
-                intent.putExtra(Constants.EXTRA_DEVICE, i.Address);
-                intent.putExtra(Constants.EXTRA_IS_HOST, true);
-                startActivity(intent);
 
-            }
-            m_LastHandled++;
-            p.Free();
-                return;
             case QUIT:
-                NetworkHandler h = m_Listeners.remove(p.Source);
-                if(h != null) {
-                    h.Terminate();
-                }
+                PeerInfo peer = PeerInfo.Retrieve(p.Source);
+                peer.Update(PeerInfo.Status.AVAILABLE);
                 break;
             case MOVE:
                 break;
@@ -277,6 +324,17 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             }
         }
         if(!handled)
+        {
             Log.w(TAG, "No game handler, ignoring packet: " + p);
+            if(p.Type == Packet.Header.QUIT)
+                ++m_LastHandled;
+        }
+    }
+
+    public enum GameType
+    {
+        UNSELECTED,
+        BASIC,
+        CUTTHROAT
     }
 }

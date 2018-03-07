@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ProgressBar;
 
 import com.felipecsl.gifimageview.library.GifImageView;
@@ -46,16 +47,15 @@ public class SplashActivity extends AppCompatActivity {
 
         catch(IOException ex)
         {
-
-
+            Log.e("SplashActivity", "Error opening splash screen", ex);
         }
 
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                SplashActivity.this.startActivity(new Intent(SplashActivity.this, WelcomeActivity.class));
+                SplashActivity.this.startActivity(new Intent(SplashActivity.this, StartActivity.class));
                 SplashActivity.this.finish();
             }
-        },3000);
+        },0);
     }
 }

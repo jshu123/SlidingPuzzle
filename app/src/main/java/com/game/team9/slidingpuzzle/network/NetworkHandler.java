@@ -12,12 +12,12 @@ package com.game.team9.slidingpuzzle.network;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.game.team9.slidingpuzzle.AppController;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Socket;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created on: 2/18/18
@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NetworkHandler implements IPacketHandler
 {
-    private static final String TAG = "Network";
+    private static final String TAG = "NetworkHandler";
     private final Closeable m_Socket;
 
     private final NetworkReceiver m_Receiver;
@@ -35,6 +35,8 @@ public class NetworkHandler implements IPacketHandler
     public final String Id;
 
     private final Object m_Lock = new Object();
+
+
 
 
     public NetworkHandler(Closeable s, String id, InputStream i, OutputStream o)
@@ -59,9 +61,7 @@ public class NetworkHandler implements IPacketHandler
     {
         synchronized (m_Lock)
         {
-            if(m_Sender.isAlive())
-                Log.e(TAG,"Multiple activation attempts on " + m_Socket);
-            else
+            if(!m_Sender.isAlive())
             {
                 m_Sender.start();
             }
@@ -71,9 +71,8 @@ public class NetworkHandler implements IPacketHandler
     public void QueueMessage(Packet p)
     {
         Log.i(TAG,"Sending data - " + p);
-        if(m_Sender == null)
-            Activate();
-            m_Sender.m_SendQueue.add(p);
+        Activate();
+        m_Sender.m_SendQueue.add(p);
     }
 
     public void Terminate()

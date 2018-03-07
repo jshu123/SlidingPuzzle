@@ -33,4 +33,16 @@
     <string name="bluetooth">Bluetooth:</string>
     <string name="invalid_eq">Invalid equation.</string>
     <string name="no_points">No points.</string>
+    <string name="enablebluetooth">Enable Bluetooth</string>
+    <string name="enablediscover">Set Discoverable</string>
+    <string name="discovererable">Discoverable</string>
+    <string name="taken">Taken by oppenent!</string>
+    <string name="reject">Reject</string>
+    <string name="score">Score</string>
+    <string name="no_high_scores">No high scores</string>
+    <string name="icon">Icon</string>
+    <string name="against_ai">Against AI</string>
+    <string name="mode">Game Mode</string>
+    <string name="select_game">Select Game</string>
+    <string name="basic_mode">Basic Mode</string>
 </resources>

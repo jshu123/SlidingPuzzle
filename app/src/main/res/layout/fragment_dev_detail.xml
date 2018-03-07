@@ -8,41 +8,44 @@
   -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="fill_parent">
 
     <ImageView
         android:id="@+id/row_icon"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:contentDescription="TODO"
-        android:padding="10dp" />
-
-    <Button
-        android:id="@+id/connectButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/connect" />
-
-    <Button
-        android:id="@+id/declineButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/decline" />
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="@string/icon"
+        android:padding="10dp"
+        android:layout_margin="8dp"/>
 
     <TextView
         android:id="@+id/nameText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:textSize="20sp"/>
+        android:layout_margin="8dp"
+        android:textSize="15sp"/>
+
+    <ImageButton
+        android:id="@+id/connectButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/connect"
+        android:layout_margin="8dp"/>
+
+    <ImageButton
+        android:id="@+id/declineButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/decline"
+        android:layout_margin="8dp"/>
+
     <TextView
         android:id="@+id/statusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:textSize="20sp"/>
+        android:layout_margin="8dp"
+        android:textSize="15sp" />
 
 </LinearLayout>

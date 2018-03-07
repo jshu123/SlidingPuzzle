@@ -10,56 +10,37 @@
 package com.game.team9.slidingpuzzle;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
 import com.game.team9.slidingpuzzle.database.User;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 
 public class HighScoreActivity extends AppCompatActivity {
 
-    private final TextView[] m_Scores = new TextView[5];
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_high_score);
-        ListView hsView = (ListView)findViewById(R.id.listView);
+        ListView hsView = findViewById(R.id.listView);
         List<User> list = HighScoreDatabase.getTop();
         Collections.reverse(list);
         hsListAdapter adapter = new hsListAdapter(this, R.layout.high_score_adapter, list);
         hsView.setAdapter(adapter);
+        hsView.setEmptyView(findViewById(R.id.emptyView));
 
         Intent intent = getIntent();
-        boolean newscore = intent.getBooleanExtra("NewScore", false);
-        if(newscore)
+        if(intent.getBooleanExtra("NewScore", false))
         {
-            Toast.makeText(this, "Congradulations!", Toast.LENGTH_LONG);
+            Toast.makeText(this, "Congradulations!", Toast.LENGTH_LONG).show();
         }
-      /*  int i = 0;
-        for (User user : HighScoreDatabase.getTop()) {
-            {
-                String tempName = user.getName();
-                int tempScore = user.getScore();
-                highscore tmp = new highscore(i+1,tempName,tempScore);
-                hsList.add(tmp);
-                ++i;
-            }
-        }
-        for(; i < 5;++i)
-        {
-            highscore tmp = new highscore(i+1,"",0);
-            hsList.add(tmp);
-        }*/
 
     }
 

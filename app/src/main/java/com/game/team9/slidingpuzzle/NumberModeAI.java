@@ -405,7 +405,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
             g=gg;
             System.arraycopy(e, 0, env, 0, e.length);
             env[f] = e[t];
-            env[t] = (byte) v;
+            env[t] = v;
             //opened = true;
             //touched = false;
             parent = null;

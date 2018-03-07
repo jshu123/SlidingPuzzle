@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.game.team9.slidingpuzzle">
-
+    <uses-feature android:name="android.hardware.bluetooth" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission
-        android:name="android.permission.CHANGE_NETWORK_STATE"
+    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"
         android:required="true" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission
@@ -14,12 +14,14 @@
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"
         android:required="true" />
-    <uses-permission
-        android:name="android.permission.CHANGE_WIFI_STATE"
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"
         android:required="true" />
-    <uses-permission
-        android:name="android.permission.INTERNET"
+    <uses-permission android:name="android.permission.INTERNET"
         android:required="true" />
+    <uses-permission android:name="android.permission.BROADCAST_STICKY"
+        android:required="true" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:name=".AppController"
@@ -30,46 +32,29 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".SplashActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity android:name=".NumberModeMenuActivity" />
         <activity android:name=".MathSinglePlayerActivity" />
         <activity android:name=".MathDoubleBasicActivity" />
         <activity android:name=".MathDoubleCuthroatActivity" />
         <activity android:name=".NumberModeActivity" />
-        <activity android:name=".MathNameActivity" />
-        <activity android:name=".MathOnlineDiscoveryActivity" />
-        <activity android:name=".MainActivity" />
+        <activity android:name=".MathOnlineDiscoveryActivity"/>
+        <activity android:name=".SplashActivity"/>
 
         <service
-            android:name=".network.MathModeService"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="" />
-        <service
-            android:name=".network.BluetoothService"
+            android:name=".network.MathNSDService"
             android:enabled="true"
             android:exported="true"
             android:permission="" />
 
         <activity android:name=".HighScoreActivity" />
-        <!--
-        <activity android:name=".SplashActivity">
+
+        <activity android:name=".StartActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        -->
-        <activity android:name=".WelcomeActivity" />
-        <activity android:name=".StartActivity" />
-        <activity android:name=".BeginActivity"></activity>
+
     </application>
 
 </manifest>

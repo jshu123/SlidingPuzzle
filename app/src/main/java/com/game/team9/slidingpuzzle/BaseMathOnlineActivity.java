@@ -27,6 +27,7 @@ import com.game.team9.slidingpuzzle.network.IPacketHandler;
 import com.game.team9.slidingpuzzle.network.Packet;
 import com.game.team9.slidingpuzzle.network.PeerInfo;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -47,10 +48,12 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
 
     private byte[] m_Tiles;
 
+
     private boolean m_Started = false;
     private boolean m_Closed = false;
 
-    private AtomicBoolean m_Finalized = new AtomicBoolean(false);
+    private final AtomicBoolean m_Initialized = new AtomicBoolean(false);
+    private final AtomicBoolean m_Finalized = new AtomicBoolean(false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,30 +80,54 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         info.Update(PeerInfo.Status.ACTIVE);
         if(m_Server)
         {
+            m_Initialized.set(true);
             m_Tiles = getBoard();
-            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT, 25, m_Tiles));
+            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT,
+                    25, m_Tiles));
             startGame();
             m_Timer.start();
             m_Timer.setOnChronometerTickListener(this);
 
         }
+        else if(m_Initialized.getAndSet(true))
+            startGame();
+        else
+            Log.i(TAG, "Game init, waiting on start");
     }
 
     public void onChronometerTick(Chronometer var)
     {
-        AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.TIME, var.getText().toString().getBytes()));
+        String text = var.getText().toString();
+        Log.i(TAG, "Time = " + text);
+        byte[] bytes = null;
+        try {
+            bytes = text.getBytes("UTF-8");
+//            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.TIME, var.getText().toString()));
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "Failed to send time", e);
+        }
+        if(bytes != null)
+        {
+            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.TIME, bytes));
+            Log.i(TAG, "Reconstructed time = " + new String(bytes, 0, bytes.length));
+            Log.i(TAG, text + ", " + bytes.length);
+        }
+        else
+            Log.e(TAG, "Failed to convert time");
     }
 
 
     private synchronized void startGame()
     {
-        if(m_Started != true) {
+        if(m_Initialized.getAndSet(true)) {
             m_Started = true;
             ProgressBar bar = findViewById(R.id.progressBar);
             bar.setVisibility(View.GONE);
             m_Game.Initialize(m_Tiles, this);
             m_Game.setVisibility(View.VISIBLE);
         }
+        else
+            Log.i(TAG, "Game ready, waiting on init");
     }
 
     public boolean handleData(Packet p)
@@ -155,14 +182,21 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
                 }
                 else
                 {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            m_Timer.setText(new String(p.Data,0, p.Length));
+                    if(m_Timer != null)
+                    runOnUiThread(() -> {
+                        String result = "NULL";
+                        try {
+                            result = new String(p.Data,0, p.Length, "UTF-8");
+
+                        } catch (UnsupportedEncodingException e) {
+                           Log.e(TAG, "Failed to set time!" + p, e);
                         }
+                        Log.i(TAG, "Time received as " + result);
+                        m_Timer.setText(result);
+                        p.Free();
                     });
                 }
-                p.Free();
+
                 return true;
         }
         return false;
@@ -184,6 +218,7 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         if(!m_Finalized.compareAndSet(false, true))
         {
             Log.e(TAG, "Attempted to end the game twice");
+            finish();
             return;
         }
         m_User.setScore(m_HostScore);
@@ -217,12 +252,10 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
             alertDialog.setTitle("Game is over");
             alertDialog.setMessage(rmsg);
             alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(@NonNull DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            startActivity(intent);
-                            finish();
-                        }
+                    (dialog, which) -> {
+                        dialog.dismiss();
+                        startActivity(intent);
+                        finish();
                     });
             alertDialog.show();
         });
@@ -248,8 +281,6 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         AppController.endGame(m_Id);
         if(m_Timer !=null)
             m_Timer.stop();
-        if(m_Game != null)
-            m_Game.Destroy();
         PeerInfo info = PeerInfo.Retrieve(m_Id);
         info.Update(PeerInfo.Status.AVAILABLE);
     }

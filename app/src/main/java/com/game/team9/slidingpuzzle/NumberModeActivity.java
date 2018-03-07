@@ -1,18 +1,17 @@
 package com.game.team9.slidingpuzzle;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
 
 import java.util.Random;
 import java.util.concurrent.Executors;
+
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_MODE;
 
 public class NumberModeActivity extends AppCompatActivity implements NumberModeView.IBoardSolvedListener {
 
@@ -44,22 +43,14 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
         }while(!isSolvable(tiles));
 
         Intent intent = getIntent();
-        if(intent.getBooleanExtra("AI", false))
+        if(intent.getStringExtra(PREF_LAST_MODE).equals("AI"))
         {
             setContentView(R.layout.activity_number_aimode);
             m_AI = findViewById(R.id.aiView);
             m_AI_Bot = new NumberModeAI(m_AI);
-            m_AI.AttachStartListener(new BaseGameView.IGameStart() {
-                @Override
-                public void OnStart() {
-                    Executors.defaultThreadFactory().newThread(m_AI_Bot).start();
-                }
-            });
-            m_AI.Initialize(tiles, new BaseGameView.ISwipeHandler() {
-                @Override
-                public void onSwipeEvent(int[] indexes) {
+            m_AI.AttachStartListener(() -> Executors.defaultThreadFactory().newThread(m_AI_Bot).start());
+            m_AI.Initialize(tiles, indexes -> {
 
-                }
             }, true);
             m_AI.AttachSolveListener(this);
         }
@@ -67,42 +58,36 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
             setContentView(R.layout.activity_number_alone_mode);
 
         m_Player = findViewById(R.id.playerView);
-        m_Player.Initialize(tiles, new BaseGameView.ISwipeHandler() {
-            @Override
-            public void onSwipeEvent(int[] indexes) {
+        m_Player.Initialize(tiles, indexes -> {
 
-            }
         });
         m_Player.AttachSolveListener(this);
         m_Timer =findViewById(R.id.chronometer);
         m_Pause = findViewById(R.id.pauseButton);
         m_Pause.setText("Pause");
         m_Timer.start();
-        m_Pause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String pstring = m_Pause.getText().toString();
-                if(pstring.equals("Pause")){
-                    m_Pause.setText("Resume");
-                    lastPause = SystemClock.elapsedRealtime();
-                    m_Timer.stop();
-                    m_Player.Pause();
-                    if(m_AI_Bot != null)
-                        m_AI_Bot.Pause();
-                    if(m_AI != null)
-                        m_AI.Pause();
+        m_Pause.setOnClickListener(v -> {
+            String pstring = m_Pause.getText().toString();
+            if(pstring.equals("Pause")){
+                m_Pause.setText("Resume");
+                lastPause = SystemClock.elapsedRealtime();
+                m_Timer.stop();
+                m_Player.Pause();
+                if(m_AI_Bot != null)
+                    m_AI_Bot.Pause();
+               // if(m_AI != null)
+                 //   m_AI.Pause();
 
-                }
-                else {
-                    m_Pause.setText("Pause");
-                    m_Timer.setBase(m_Timer.getBase() + SystemClock.elapsedRealtime() - lastPause);
-                    m_Timer.start();
-                    m_Player.UnPause();
-                    if(m_AI != null)
-                        m_AI.UnPause();
-                    if(m_AI_Bot != null)
-                        m_AI_Bot.UnPause();
-                }
+            }
+            else {
+                m_Pause.setText("Pause");
+                m_Timer.setBase(m_Timer.getBase() + SystemClock.elapsedRealtime() - lastPause);
+                m_Timer.start();
+                m_Player.UnPause();
+                //if(m_AI != null)
+                //    m_AI.UnPause();
+                if(m_AI_Bot != null)
+                    m_AI_Bot.UnPause();
             }
         });
     }
@@ -120,11 +105,9 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
         alertDialog.setTitle("Game over");
         alertDialog.setMessage(msg);
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(@NonNull DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        complete();
-                    }
+                (dialog, which) -> {
+                    dialog.dismiss();
+                    complete();
                 });
         alertDialog.show();
     }
@@ -134,10 +117,6 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
         super.onDestroy();
         if(m_AI_Bot != null)
             m_AI_Bot.Solved(0);
-        if(m_AI != null)
-            m_AI.Destroy();
-        if(m_Player != null)
-            m_Player.Destroy();
         if(m_Timer != null)
             m_Timer.stop();
     }

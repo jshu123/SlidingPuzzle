@@ -1,6 +1,6 @@
 package com.game.team9.slidingpuzzle;
 
-import android.app.Activity;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -17,13 +17,14 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Handler;
 
 /**
  * Created on: 1/30/18
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class BaseGameView extends View implements ViewTreeObserver.OnGlobalLayoutListener{
 
     public static final int BLANK_VALUE = -1;
+    private static final String TAG = "GameView";
 
     private static final Paint m_TilePaint = new Paint();
     private static final Paint m_Grid= new Paint();
@@ -40,6 +42,8 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     private final int[] m_Swipe = new int[5];
     private int m_SwipeIndex = 0;
+
+    private final android.os.Handler m_Handler = new android.os.Handler();
 
     private final List<IBoardChangeListener> m_Listeners = new ArrayList<>();
     private final List<IGameStart> m_Starters = new ArrayList<>();
@@ -60,7 +64,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private float m_CurY;
 
     private boolean m_Reverse;
-    private boolean m_Pause;
 
     private float m_Endx;
     private float m_Endy;
@@ -69,6 +72,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
     private long m_TimeStart;
 
     private boolean m_LockedforCPU = false;
+    private boolean m_Paused = false;
 
 
     private float m_XFontOffset;
@@ -86,18 +90,12 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     private ISwipeHandler m_Swiper;
 
-    static{
+    static {
         m_TilePaint.setStyle(Paint.Style.FILL_AND_STROKE);
         m_TilePaint.setStrokeWidth(1);
         m_TilePaint.setStrokeCap(Paint.Cap.ROUND);
         m_TilePaint.setStrokeJoin(Paint.Join.BEVEL);
-        //m_Background.setAntiAlias(true);
-        //m_Background.setDither(true);
-        //m_Background.setFilterBitmap(true);
     }
-
-    private GameThread m_Thread;
-   // private Activity m_Activity;
 
     protected BaseGameView(Context context, AttributeSet attrs)
     {
@@ -171,16 +169,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     }
 
-public void Pause()
-{
-    m_Pause = true;
-}
 
-
-public void UnPause()
-{
-    m_Pause = false;
-}
     public float getTileWidth(){return m_TileWidth;}
     public float getTileHeight(){return m_TileHeight;}
     public int getBlank(){return m_Blank;}
@@ -188,9 +177,9 @@ public void UnPause()
 
     @Override
     public final boolean onTouchEvent(@NonNull MotionEvent event) {
-        Log.i("MOTION", "= " + event.getAction());
-        if(m_Pause)
+        if(m_Paused)
             return true;
+        Log.i("MOTION", "= " + event.getAction());
         switch(event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
@@ -293,8 +282,10 @@ public void UnPause()
                     Log.i("BLANK", "Blank: " + m_Blank);
                     Log.i("BLANK", android.os.Process.myTid() + ", " + android.os.Process.myPid());
                 }
+
+                m_Animating.set(true);
                 invalidate();
-                m_Thread.Resume();
+                //m_Thread.Resume();
             }
             else
             {
@@ -351,32 +342,28 @@ public void UnPause()
                 float rx = (i % 5) * m_TileWidth;
                 float ry = (i > 0 ? i / 5 : 0) * m_TileHeight;
                 if(swipeContains(i))
-                    canvas.drawBitmap(m_TileSelect, rx, ry, m_TilePaint);
+                        canvas.drawBitmap(m_TileSelect, rx, ry, m_TilePaint);
                     else
-                    canvas.drawBitmap(m_TileMap, rx, ry, m_TilePaint);
+                        canvas.drawBitmap(m_TileMap, rx, ry, m_TilePaint);
                 //canvas.drawRect(rx + (m_GridWidth / 2), ry + (m_GridWidth / 2), rx + m_TileWidth - (m_GridWidth / 2), ry + m_TileHeight - (m_GridWidth / 2), m_TilePaint);
                 canvas.drawText(boardToText(m_Tiles[i]), rx + m_XFontOffset, ry + m_YFontOffset, m_TextPaint);
             } else
             {
-                //canvas.drawRect(rx + (m_GridWidth / 2), ry + (m_GridWidth / 2), rx + m_TileWidth - (m_GridWidth / 2), ry + m_TileHeight - (m_GridWidth / 2),
-                   //     m_BlankCol);
+                Log.e(TAG, "Moving tile to a nonblank tile!!");
             }
         }
 
         m_TimeNow =  System.currentTimeMillis();
-        if(a) //&& (m_TimeNow - m_TimePrev > 16))
+        if(a)
         {
             float frac = (float)curFrac();
-            float x = m_CurX = m_StartX + (( m_Endx - m_StartX) * frac);
-            float y = m_CurY = m_StartY + ((m_Endy - m_StartY) * frac);
+            m_CurX = m_StartX + (( m_Endx - m_StartX) * frac);
+            m_CurY = m_StartY + ((m_Endy - m_StartY) * frac);
 
-           // Log.i("ANIM", "T = " +  (m_TimeNow - m_TimeStart) + " f= " + frac + ", x = " + x + " (" + m_StartX + " -> " + m_Endx + "), y - " + y + " (" + m_StartY + " -> " + m_Endy + ")");
-            //m_CurX += m_Dx;
-            //m_CurY += m_Dy;
             if((!m_Reverse && m_CurX > m_Endx) || (m_Reverse && m_CurX < m_Endx))
             {
                 m_CurX = m_Endx;
-                m_Thread.Pause();
+                m_Animating.set(false);
                 for (IBoardChangeListener b : m_Listeners) {
                     b.Changed(true);
                 }
@@ -384,7 +371,7 @@ public void UnPause()
             else if((!m_Reverse && m_CurY > m_Endy) || (m_Reverse && m_CurY < m_Endy))
             {
                 m_CurY = m_Endy;
-                m_Thread.Pause();
+                m_Animating.set(false);
                 for (IBoardChangeListener b : m_Listeners) {
                     b.Changed(true);
                 }
@@ -397,6 +384,8 @@ public void UnPause()
 
         if(AppController.DEBUG)
        canvas.drawCircle(m_LastClickx, m_LastClicky, 10.0f, m_TextPaint);
+        if(m_Animating.get())
+            m_Handler.postDelayed(this::invalidate, 16);
     }
 
     private double curFrac()
@@ -409,19 +398,16 @@ public void UnPause()
         return (Math.cos(((dt/250f) + 1f) * Math.PI) / 2.0f) + 0.5f;
     }
 
-    public void Destroy()
+    public void Pause()
     {
-        if(m_Thread != null)
-        {
-            m_Thread.Halt();
-            m_Thread.Resume();
-            try {
-                m_Thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        m_Paused = true;
     }
+
+    public void UnPause()
+    {
+        m_Paused = false;
+    }
+
     /**
      * Use this to receive updates anytime the board changes
      * @param b
@@ -437,7 +423,7 @@ public void UnPause()
     }
 
     @Override
-    /**
+    /*
      * Called internally only.
      */
     public void onGlobalLayout()
@@ -476,9 +462,6 @@ public void UnPause()
 
     private void finishInit()
     {
-        m_Thread = new GameThread(m_Animating, ()->/*m_Activity.runOnUiThread(()->*/invalidate());
-        //m_Thread;
-        Executors.defaultThreadFactory().newThread(m_Thread).start();
         invalidate();
         for (IGameStart st : m_Starters) {
             st.OnStart();
@@ -527,71 +510,6 @@ public void UnPause()
     public interface IGameStart
     {
         void OnStart();
-    }
-
-    private interface IInvalidate
-    {
-        void doInvalidate();
-    }
-
-    private static class GameThread extends  Thread
-    {
-        private final  Object mm_Lock = new Object();
-        private final AtomicBoolean m_Flag;
-        private final IInvalidate m_View;
-        private boolean mm_Halt;
-
-        public GameThread(final AtomicBoolean flag, final IInvalidate view)
-        {
-            m_Flag = flag;
-            m_View = view;
-        }
-
-        @Override
-        public void run() {
-            this.setName("Animate - " + android.os.Process.myPid());
-            Log.i("ANIMATE", "Start - " +  android.os.Process.myPid());
-            while(!mm_Halt)
-            {
-                synchronized (mm_Lock)
-                {
-                    while(!m_Flag.get()) {
-                        try {
-                            mm_Lock.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                m_View.doInvalidate();
-            }
-            Log.i("ANIMATE", "End - " +  android.os.Process.myPid());
-        }
-
-        public void Pause(){
-            synchronized (mm_Lock)
-            {
-                m_Flag.set(false);
-            }
-
-        }
-
-        public void Resume()
-        {
-            synchronized (mm_Lock)
-            {
-                if(!m_Flag.getAndSet(true))
-                {
-                    mm_Lock.notifyAll();
-                }
-            }
-        }
-        public void Halt(){mm_Halt = true;}
     }
 
     public interface ISwipeHandler
