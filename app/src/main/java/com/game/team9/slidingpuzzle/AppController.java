@@ -20,6 +20,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Toast;
 
@@ -44,6 +45,7 @@ import java.util.UUID;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_MODE;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ONLINE_MODE;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ROUNDS;
 
 /**
  * Created on: 2/6/18
@@ -52,9 +54,8 @@ import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ONLINE_MO
 
 public class AppController extends Application implements NetworkReceiver.IDataInbound {
 
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
     private static final String TAG = "Controller";
-    private static GameType m_GameType = GameType.UNSELECTED;
     private static int PORT = 49152;
     private static AppController s_Instance;
 
@@ -129,6 +130,18 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         else
             Log.w(TAG, "Cannot find handler to send " + p);
     }
+
+    public static int getRounds()
+    {
+        return s_Instance._getRounds();
+    }
+
+    private int _getRounds()
+    {
+        SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
+        return pref.getInt(PREF_LAST_ROUNDS, 1);
+    }
+
     public static int getGameMode()
     {
         return s_Instance._getGameMode();
@@ -280,14 +293,8 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             case REQUEST:
             {
                 PeerInfo i = PeerInfo.Retrieve(p.Source);
-                i.Data = p.Data[0] == 0 ? MathDoubleBasicActivity.class : MathDoubleCuthroatActivity.class;
-                i.Update(PeerInfo.Status.INBOUND_REQUEST_BAS, info-> {
-                        Intent intent = new Intent(s_Instance, (Class)info.Data);
-                        intent.putExtra(Constants.EXTRA_ID, info.Name);
-                        intent.putExtra(Constants.EXTRA_DEVICE, info.Address);
-                        intent.putExtra(Constants.EXTRA_IS_HOST, false);
-                        startActivity(intent);
-                });
+                i.Data = p.Data[1];
+                i.Update(p.Data[0] == 0 ? PeerInfo.Status.INBOUND_REQUEST_BAS : PeerInfo.Status.INBOUND_REQUEST_CUT);
                 m_LastHandled++;
             }
             p.Free();
@@ -329,12 +336,5 @@ public class AppController extends Application implements NetworkReceiver.IDataI
             if(p.Type == Packet.Header.QUIT)
                 ++m_LastHandled;
         }
-    }
-
-    public enum GameType
-    {
-        UNSELECTED,
-        BASIC,
-        CUTTHROAT
     }
 }

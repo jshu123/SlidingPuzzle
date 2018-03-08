@@ -47,7 +47,7 @@ public class MathNSDService extends Service {
 
     private NsdManager m_NsdManager;
 
-    private boolean m_Registered;
+    private final AtomicBoolean m_Registered = new AtomicBoolean(false);
     private boolean m_Discovering;
     private static final AtomicBoolean m_Registering = new AtomicBoolean(false);
     private static final Object m_Lock = new Object();
@@ -56,7 +56,6 @@ public class MathNSDService extends Service {
     private String m_Name;
     private final String m_UniqueName;
     private NsdManager.DiscoveryListener m_DiscoveryListener;
-    private NsdManager.ResolveListener m_ResolveListener;
     private NsdManager.RegistrationListener m_RegListener;
 
     SharedPreferences.OnSharedPreferenceChangeListener m_NameChanger = new SharedPreferences.OnSharedPreferenceChangeListener() {
@@ -84,7 +83,7 @@ public class MathNSDService extends Service {
         m_RegListener = new NsdManager.RegistrationListener() {
             @Override
             public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                m_Registered= false;
+                m_Registered.lazySet(false);
                 //m_NsdManager = null;
                 Log.e(TAG, "Registration failed - " + errorCode);
                 m_Registering.lazySet(false);
@@ -93,13 +92,12 @@ public class MathNSDService extends Service {
             @Override
             public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 Log.e(TAG, "Unregister failed - " + errorCode);
-                m_Registered= true;
                 m_Registering.lazySet(false);
             }
 
             @Override
             public void onServiceRegistered(NsdServiceInfo serviceInfo) {
-                m_Registered= true;
+                m_Registered.set(true);
                 SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
                 pref.registerOnSharedPreferenceChangeListener(m_NameChanger);
                 Log.i(TAG, "Registered ");
@@ -109,12 +107,15 @@ public class MathNSDService extends Service {
 
             @Override
             public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
-                m_Registered= false;
                 SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
                 pref.unregisterOnSharedPreferenceChangeListener(m_NameChanger);
                 Log.i(TAG, "Unregistered ");
                 //m_NsdManager = null;
                 m_Registering.lazySet(false);
+                synchronized (m_Registered) {
+                    m_Registered.set(false);
+                    m_Registered.notifyAll();
+                }
             }
         };
 
@@ -200,12 +201,12 @@ public class MathNSDService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(m_Registered)
+        if(m_Registered.get())
         {
             m_NsdManager.unregisterService(m_RegListener);
             SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
             pref.unregisterOnSharedPreferenceChangeListener(m_NameChanger);
-            m_Registered = false;
+            m_Registered.lazySet(false);
         }
         Log.i(TAG, "Destroyed");
     }
@@ -225,6 +226,16 @@ public class MathNSDService extends Service {
                     m_NsdManager.stopServiceDiscovery(m_DiscoveryListener);
                 m_NsdManager.unregisterService(m_RegListener);
                 Log.i(TAG, "Stopping " + m_Name);
+                while (m_Registered.get())
+                {
+                    synchronized (m_Registered) {
+                        try {
+                            m_Registered.wait();
+                        } catch (InterruptedException e) {
+                            Log.e(TAG, "Failed to wait in unregistration", e);
+                        }
+                    }
+                }
             }
             m_Name = name;
             m_NsdManager.registerService(serviceInfo,NsdManager.PROTOCOL_DNS_SD, m_RegListener);

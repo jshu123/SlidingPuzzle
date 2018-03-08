@@ -136,8 +136,9 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 connect.setImageResource(m_ConnectIcon);
                 connect.setOnClickListener(v14 ->{
                         Packet p = Packet.AcquirePacket(addr, Packet.Header.REQUEST);
-                        p.Length = 1;
+                        p.Length = 2;
                         p.Data[0] = (byte) AppController.getGameMode();
+                        p.Data[1] = (byte) AppController.getRounds();
                     AppController.SendData(p);
                     peer.Info = PeerInfo.Status.OUTBOUND_REQUEST;
                     notifyDataSetChanged();
@@ -146,8 +147,8 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 break;
             case INBOUND_REQUEST_CUT:
             case INBOUND_REQUEST_BAS:
-                Class c = peer.Info == INBOUND_REQUEST_BAS ? MathDoubleBasicActivity.class : MathDoubleCuthroatActivity.class;
-                text.setText(peer.Info == INBOUND_REQUEST_BAS ? R.string.req_bas : R.string.req_cut);
+                String t = "They have invite you to play " + (byte)peer.Data + " rounds of " + (peer.Info == INBOUND_REQUEST_BAS ? "basic mode" : "cutthroat mode");
+                text.setText(t);
                 decline.setVisibility(View.VISIBLE);
                 decline.setEnabled(true);
                 decline.setImageResource(m_RejectIcon);
@@ -159,11 +160,12 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 connect.setVisibility(View.VISIBLE);
                 connect.setEnabled(true);
                 connect.setImageResource(m_AcceptIcon);
-                connect.setOnClickListener(v12 -> {
-                    Intent intent = new Intent(getContext(), c);
+                   connect.setOnClickListener(v12 -> {
+                    Intent intent = new Intent(getContext(), peer.Info == INBOUND_REQUEST_BAS ? MathDoubleBasicActivity.class : MathDoubleCuthroatActivity.class);
                     intent.putExtra(Constants.EXTRA_ID, device);
                     intent.putExtra(Constants.EXTRA_DEVICE, addr);
                     intent.putExtra(Constants.EXTRA_IS_HOST, false);
+                       intent.putExtra(Constants.EXTRA_ROUNDS, (byte)peer.Data);
                     AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.ACCEPT));
                     peer.Info = PeerInfo.Status.ACTIVE;
                     notifyDataSetChanged();

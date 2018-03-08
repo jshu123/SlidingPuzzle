@@ -16,7 +16,10 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -28,6 +31,7 @@ import com.game.team9.slidingpuzzle.network.PeerInfo;
 import com.game.team9.slidingpuzzle.network.PeerListAdapter;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ONLINE_MODE;
+import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ROUNDS;
 
 public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IPacketHandler, CompoundButton.OnCheckedChangeListener {
 
@@ -36,6 +40,8 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
 
     private RadioButton m_Basic;
     private RadioButton m_Cut;
+
+    private EditText m_Rounds;
 
     private SharedPreferences m_Pref;
 
@@ -48,7 +54,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
         AppController.addHandler(this);
         m_Basic = findViewById(R.id.basicRadio);
         m_Cut = findViewById(R.id.cutRadio);
-
+        m_Rounds = findViewById(R.id.roundsRum);
         m_DevList = findViewById(R.id.listView);
         m_DevList.setAdapter(m_Adapter);
         m_DevList.setEmptyView(findViewById(R.id.empty));
@@ -58,6 +64,20 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
             m_Basic.setChecked(true);
         else
             m_Cut.setChecked(true);
+
+        m_Rounds.setText(String.valueOf(pref.getInt(PREF_LAST_ROUNDS, 1)));
+        m_Rounds.setOnEditorActionListener((v, actionId, event)->{
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                    actionId == EditorInfo.IME_ACTION_DONE ||
+                    event != null &&
+                            event.getAction() == KeyEvent.ACTION_DOWN &&
+                            event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                if (event == null || !event.isShiftPressed()) {
+                    m_Pref.edit().putInt(PREF_LAST_ROUNDS, Integer.parseInt(v.getText().toString())).apply();
+                }
+            }
+            return false; // pass on to other listeners.
+        });
 
         m_Basic.setOnCheckedChangeListener(this);
         m_Cut.setOnCheckedChangeListener(this);
@@ -90,6 +110,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
                 intent.putExtra(Constants.EXTRA_ID, i.Name);
                 intent.putExtra(Constants.EXTRA_DEVICE, i.Address);
                 intent.putExtra(Constants.EXTRA_IS_HOST, true);
+                intent.putExtra(Constants.EXTRA_ROUNDS, AppController.getRounds());
                 startActivity(intent);
 
             }

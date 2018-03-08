@@ -11,6 +11,7 @@ import android.widget.Chronometer;
 import java.util.Random;
 import java.util.concurrent.Executors;
 
+import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_MODE;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_MODE;
 
 public class NumberModeActivity extends AppCompatActivity implements NumberModeView.IBoardSolvedListener {
@@ -43,7 +44,7 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
         }while(!isSolvable(tiles));
 
         Intent intent = getIntent();
-        if(intent.getStringExtra(PREF_LAST_MODE).equals("AI"))
+        if(intent.getStringExtra(EXTRA_MODE).equals("AI"))
         {
             setContentView(R.layout.activity_number_aimode);
             m_AI = findViewById(R.id.aiView);

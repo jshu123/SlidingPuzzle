@@ -167,7 +167,7 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
     {
         m_ModeGroup.setOnCheckedChangeListener(null);
         m_NumberGroup.setOnCheckedChangeListener(null);
-        m_ModeGroup.setOnCheckedChangeListener(null);
+        m_MathGroup.setOnCheckedChangeListener(null);
         if(m_MathMode.isChecked())
         {
             m_NumberGroup.clearCheck();
@@ -184,7 +184,7 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
         }
         m_ModeGroup.setOnCheckedChangeListener(this);
         m_NumberGroup.setOnCheckedChangeListener(this);
-        m_ModeGroup.setOnCheckedChangeListener(this);
+        m_MathGroup.setOnCheckedChangeListener(this);
     }
 
 

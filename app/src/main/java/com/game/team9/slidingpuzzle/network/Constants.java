@@ -57,6 +57,7 @@ public class Constants {
     public static final String EXTRA_MOVEEQ = "MOVEEQ";
     public static final String EXTRA_HANDLER = "HANDLER";
     public static final String EXTRA_IS_HOST = "IS_HOST";
+    public static final String EXTRA_ROUNDS = "ROUNDS";
     public static final String EXTRA_BOARD = "BOARD";
     public static final String EXTRA_DEVICE = "DEVICE";
     public static final String EXTRA_ID = "ID";
@@ -70,6 +71,7 @@ public class Constants {
     public static final String PREF_LAST_MODE = "MathLastMode";
     public static final String PREF_LAST_GAME = "MathLastGame";
     public static final String PREF_LAST_ONLINE_MODE = "MathLastOnlineMode";
+    public static final String PREF_LAST_ROUNDS = "MathLastRound";
 
 
     public static final int HEADER_NULL = 0;

@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -144,12 +145,15 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                 m_LockedforCPU = ai;
                 m_Blank = findBlank(board);
                 System.arraycopy(board, 0, m_Tiles, 0, board.length);
+                Log.i(TAG, "Board has been filled");
                 if(m_Init.incrementAndGet() == 2)
                 {
                     finishInit();
                 }
             }
         }
+        else
+            Log.e(TAG, "Attempted to initalize twice");
     }
 
     /**
@@ -284,7 +288,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                 }
 
                 m_Animating.set(true);
-                invalidate();
+                new android.os.Handler(Looper.getMainLooper()).post(()->invalidate());
                 //m_Thread.Resume();
             }
             else
@@ -325,15 +329,8 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             super.onDraw(canvas);
             return;
         }
-      /*  if(m_Debug) {
-            Log.i("DRAW", "Blank: " + m_Blank);
-            Log.i("DRAW", android.os.Process.myTid() + ", " + android.os.Process.myPid());
-        }*/
+
         canvas.drawRect(0, 0, getWidth(), getHeight(), m_Grid);
-        /*for (int i = 0; i < 6; ++i) {
-            canvas.drawLine(0, i * m_TileHeight, getWidth(), i * m_TileHeight, m_Grid);
-            canvas.drawLine(i * m_TileWidth, 0, i * m_TileWidth, getHeight(), m_Grid);
-        }*/
         boolean a = m_Animating.get();
         for (int i = 0; i < 25; ++i) {
             if(a && (i == m_Blank || i == m_LastBlank))
@@ -453,7 +450,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             d.draw(c);
            // m_TileMap = applyFleaEffect(m_TileMap);
             //m_TileMap = Bitmap.createBitmap((int)m_TileWidth, (int)m_TileHeight,Bitmap.Config.ARGB_8888);
-
+            Log.i(TAG, "Internal init");
             m_TilePaint.setShader(new BitmapShader(m_TileMap, Shader.TileMode.MIRROR, Shader.TileMode.CLAMP));
             if(m_Init.incrementAndGet() == 2)
                 finishInit();
@@ -462,6 +459,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     private void finishInit()
     {
+        Log.i(TAG, "Starting Game!");
         invalidate();
         for (IGameStart st : m_Starters) {
             st.OnStart();

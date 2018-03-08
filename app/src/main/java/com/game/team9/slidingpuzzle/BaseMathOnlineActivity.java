@@ -9,9 +9,9 @@
 
 package com.game.team9.slidingpuzzle;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -27,7 +27,6 @@ import com.game.team9.slidingpuzzle.network.IPacketHandler;
 import com.game.team9.slidingpuzzle.network.Packet;
 import com.game.team9.slidingpuzzle.network.PeerInfo;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -37,9 +36,12 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
     private boolean m_Server;
     private String m_Id;
     private Chronometer m_Timer;
+    private int m_Rounds;
+    private int m_Current;
 
     protected TextView m_HostScoreView;
     protected TextView m_ClientScoreView;
+    protected TextView m_RoundView;
     protected MathModeView m_Game;
     protected final User m_Opponent = new User();
 
@@ -47,6 +49,7 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
     protected int m_ClientScore;
 
     private byte[] m_Tiles;
+    private ProgressBar m_Bar;
 
 
     private boolean m_Started = false;
@@ -67,8 +70,12 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         m_Timer = findViewById(R.id.chronometer);
         m_HostScoreView = findViewById(R.id.hostScoreText);
         m_ClientScoreView = findViewById(R.id.clientScoreText);
+        m_RoundView = findViewById(R.id.roundText);
         m_ClientScoreView.setText("0");
         m_HostScoreView.setText("0");
+        m_Rounds = intent.getByteExtra(Constants.EXTRA_ROUNDS, (byte)1);
+        m_Current = 1;
+        m_Bar = findViewById(R.id.progressBar);
         TextView t = findViewById(R.id.hostNameText);
         t.setText(m_User.getName());
         t = findViewById(R.id.clientNameText);
@@ -80,13 +87,7 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         info.Update(PeerInfo.Status.ACTIVE);
         if(m_Server)
         {
-            m_Initialized.set(true);
-            m_Tiles = getBoard();
-            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT,
-                    25, m_Tiles));
-            startGame();
-            m_Timer.start();
-            m_Timer.setOnChronometerTickListener(this);
+           startServer();
 
         }
         else if(m_Initialized.getAndSet(true))
@@ -95,25 +96,21 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
             Log.i(TAG, "Game init, waiting on start");
     }
 
+    private void startServer()
+    {
+        m_Initialized.set(true);
+        m_Tiles = getBoard();
+        AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT,
+                25, m_Tiles));
+        startGame();
+        m_Timer.setBase(SystemClock.elapsedRealtime());
+        m_Timer.start();
+        m_Timer.setOnChronometerTickListener(this);
+    }
+
     public void onChronometerTick(Chronometer var)
     {
-        String text = var.getText().toString();
-        Log.i(TAG, "Time = " + text);
-        byte[] bytes = null;
-        try {
-            bytes = text.getBytes("UTF-8");
-//            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.TIME, var.getText().toString()));
-        } catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "Failed to send time", e);
-        }
-        if(bytes != null)
-        {
-            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.TIME, bytes));
-            Log.i(TAG, "Reconstructed time = " + new String(bytes, 0, bytes.length));
-            Log.i(TAG, text + ", " + bytes.length);
-        }
-        else
-            Log.e(TAG, "Failed to convert time");
+        AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.TIME, var.getText().toString().getBytes()));
     }
 
 
@@ -121,10 +118,10 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
     {
         if(m_Initialized.getAndSet(true)) {
             m_Started = true;
-            ProgressBar bar = findViewById(R.id.progressBar);
-            bar.setVisibility(View.GONE);
+            m_Bar.setVisibility(View.GONE);
             m_Game.Initialize(m_Tiles, this);
             m_Game.setVisibility(View.VISIBLE);
+            m_RoundView.setText("Round " + m_Current + " of " + m_Rounds);
         }
         else
             Log.i(TAG, "Game ready, waiting on init");
@@ -172,7 +169,7 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
                 p.Free();
                 onGameEnded(m_Id + " has ended the game.  ");
                 return true;
-            case MOVE:HandleMove(new Equation(p.Data));
+            case MOVE:HandleMove(new Equation(p.Data, p.Length));
                 p.Free();
                 return true;
             case TIME:
@@ -184,15 +181,7 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
                 {
                     if(m_Timer != null)
                     runOnUiThread(() -> {
-                        String result = "NULL";
-                        try {
-                            result = new String(p.Data,0, p.Length, "UTF-8");
-
-                        } catch (UnsupportedEncodingException e) {
-                           Log.e(TAG, "Failed to set time!" + p, e);
-                        }
-                        Log.i(TAG, "Time received as " + result);
-                        m_Timer.setText(result);
+                        m_Timer.setText(new String(p.Data,0, p.Length));
                         p.Free();
                     });
                 }
@@ -215,12 +204,14 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
 
     protected void onGameEnded(String msg)
     {
-        if(!m_Finalized.compareAndSet(false, true))
+      /*  if(!m_Finalized.compareAndSet(false, true))
         {
             Log.e(TAG, "Attempted to end the game twice");
             finish();
             return;
-        }
+        }*/
+        m_Timer.stop();
+        m_Initialized.set(false);
         m_User.setScore(m_HostScore);
         m_Opponent.setScore(m_ClientScore);
 
@@ -236,29 +227,52 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         HighScoreDatabase.updateUser(m_User);
         //top will not contain our score, so we can see if beat anyone.
 
-        Intent intent = new Intent(BaseMathOnlineActivity.this, HighScoreActivity.class);
-        for (User user : top) {
-            if(m_ClientScore > user.getScore())
-            {
-                intent.putExtra("NewScore", true);
-                msg += "You have set a new highscore!";
-                break;
+        if(m_Rounds == m_Current) {
+            Intent intent = new Intent(BaseMathOnlineActivity.this, HighScoreActivity.class);
+            for (User user : top) {
+                if (m_ClientScore > user.getScore()) {
+                    intent.putExtra("NewScore", true);
+                    msg += "You have set a new highscore!";
+                    break;
+                }
             }
+
+            final String rmsg = msg;
+            runOnUiThread(() -> {
+                AlertDialog alertDialog = new AlertDialog.Builder(BaseMathOnlineActivity.this).create();
+                alertDialog.setTitle("Game is over");
+                alertDialog.setMessage(rmsg);
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        (dialog, which) -> {
+                            dialog.dismiss();
+                            startActivity(intent);
+                            finish();
+                        });
+                alertDialog.show();
+            });
+            return;
+        }
+        else {
+            final String rmsg = msg;
+            runOnUiThread(() -> {
+                AlertDialog alertDialog = new AlertDialog.Builder(BaseMathOnlineActivity.this).create();
+                alertDialog.setTitle("Game is over");
+                alertDialog.setMessage(rmsg);
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        (dialog, which) -> dialog.dismiss());
+                alertDialog.show();
+            });
         }
 
-        final String rmsg = msg;
-        runOnUiThread(()->{
-            AlertDialog alertDialog = new AlertDialog.Builder(BaseMathOnlineActivity.this).create();
-            alertDialog.setTitle("Game is over");
-            alertDialog.setMessage(rmsg);
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                    (dialog, which) -> {
-                        dialog.dismiss();
-                        startActivity(intent);
-                        finish();
-                    });
-            alertDialog.show();
-        });
+        if(m_Server)
+        {
+            startServer();
+        }
+        else
+        {
+            m_Game.setVisibility(View.GONE);
+            m_Bar.setVisibility(View.VISIBLE);
+        }
     }
 
     /**
@@ -275,7 +289,6 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(!m_Closed)
             AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.QUIT));
         AppController.removeHandler(this);
         AppController.endGame(m_Id);

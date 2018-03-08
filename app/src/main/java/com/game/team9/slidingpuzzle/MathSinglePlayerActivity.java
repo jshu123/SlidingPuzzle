@@ -42,10 +42,6 @@ public class MathSinglePlayerActivity extends BaseMathActivity {
         m_ScoreView.setText("0");
         m_Pause.setText("Pause");
 
-
-
-
-
         m_Game.Initialize(getBoard(), this);
         m_Timer = findViewById(R.id.chronometer);
         m_Timer.start();
@@ -55,9 +51,7 @@ public class MathSinglePlayerActivity extends BaseMathActivity {
 
     public void onGiveupClicked(View view)
     {
-
         onGameEnded();
-
     }
     public void onPauseClicked(View view)
     {
@@ -77,7 +71,6 @@ public class MathSinglePlayerActivity extends BaseMathActivity {
             m_Game.UnPause();
 
         }
-        //badToast(R.string.invalid_eq);
 
     }
     @Override

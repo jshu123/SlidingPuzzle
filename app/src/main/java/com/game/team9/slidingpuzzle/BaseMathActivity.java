@@ -47,8 +47,6 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
     protected Toast m_Toast;
     protected TextView m_ToastText;
 
-    protected TextView m_Notifier;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,7 +64,16 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
 
     public static byte[] getBoard()
     {
-        byte tiles[] = new byte[25];
+        if(AppController.DEBUG)
+        {
+            return new byte[]{1,11,1,13,2,
+                    2,12,1,13,1,
+                    5,11,4,13,9,
+                    4,11,5,13,9,
+                    2,12,1,13,-1
+            };
+        }
+        byte tiles[]= new byte[25];
         Stack<Byte> stack = new Stack<>();
         Random r = new Random();
         for(int i = 0; i < 5; ++i)
@@ -189,7 +196,7 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
         {
             return 0xFFFF & (a | (b << 4) | (op << 8) | (eq << 12));
         }
-        public byte[] Unpack(){
+        byte[] Unpack(){
             return new byte[]{
                     (byte) (0xF &  value),
                     (byte) (0xF &  (value >> 4)),
@@ -200,11 +207,11 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
 
         public final int value;
 
-        public final int reverse;
-        public final boolean valid;
+        final int reverse;
+        final boolean valid;
 
         public final int score;
-        public Equation(byte[] vals)
+        Equation(byte[] vals)
         {
             if(vals[1] == 13)
             {
@@ -231,7 +238,42 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
                     && Eval(0xF &  reverse, 0xF & (reverse >> 4), 0xF & (reverse >> 8)) == (0xF & (reverse >> 12));
         }
 
-        public Equation(int[] vals)
+        Equation(byte[] vals, int len)
+        {
+            if(len == 4)
+            {
+                value = Pack(vals[0], vals[1], vals[2], vals[3]);
+                if(Eval(vals[1], vals[0], vals[2]) == vals[3])
+                reverse = Pack(vals[1], vals[0], vals[2], vals[3]);
+                else
+                reverse = value;
+            }
+            else if(vals[1] == 13)
+            {
+                value = Pack(vals[4],vals[2], vals[3],vals[0]);
+                if(Eval(vals[2], vals[4], vals[3]) == vals[0])
+                    reverse = Pack(vals[2], vals[4], vals[3], vals[0]);
+                else
+                    reverse = value;
+            }
+            else if(vals[3] == 13)
+            {
+                value = Pack(vals[0],vals[2], vals[1],vals[4]);
+                if(Eval(vals[2], vals[0], vals[1]) == vals[4])
+                    reverse = Pack(vals[2], vals[0], vals[1], vals[4]);
+                else
+                    reverse = value;
+            }else
+            {
+                value = reverse = 0;
+            }
+
+            score = (0xF & (value >> 12));
+            valid = Eval(0xF &  value, 0xF & (value >> 4), 0xF & (value >> 8)) == (0xF & (value >> 12))
+                    && Eval(0xF &  reverse, 0xF & (reverse >> 4), 0xF & (reverse >> 8)) == (0xF & (reverse >> 12));
+        }
+
+        Equation(int[] vals)
         {
             if(vals[1] == 13)
             {
