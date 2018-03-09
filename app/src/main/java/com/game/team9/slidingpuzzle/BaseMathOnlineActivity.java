@@ -12,10 +12,12 @@ package com.game.team9.slidingpuzzle;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -55,6 +57,11 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
     private final AtomicBoolean m_Initialized = new AtomicBoolean(false);
     private final AtomicBoolean m_Finalized = new AtomicBoolean(false);
 
+    private int m_Round;
+    private Button m_Pause;
+    private long lastPause;
+    private TextView m_textRound;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,37 +69,68 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
 
         m_Id = intent.getStringExtra(Constants.EXTRA_DEVICE);
         m_Opponent.setName(intent.getStringExtra(Constants.EXTRA_ID));
+
+        m_Round = intent.getIntExtra("ROUND", 0);
+        m_Pause = findViewById(R.id.pauseButton);
+        m_textRound = findViewById(R.id.textRound);
+
         setContentView(R.layout.activity_math_online);
         AppController.addHandler(this);
         m_Timer = findViewById(R.id.chronometer);
         m_HostScoreView = findViewById(R.id.hostScoreText);
         m_ClientScoreView = findViewById(R.id.clientScoreText);
-        m_ClientScoreView.setText("0");
-        m_HostScoreView.setText("0");
+       // m_ClientScoreView.setText("0");
+       // m_HostScoreView.setText("0");
         TextView t = findViewById(R.id.hostNameText);
         t.setText(m_User.getName());
         t = findViewById(R.id.clientNameText);
         t.setText(m_Opponent.getName());
         m_Game = findViewById(R.id.playerView);
         m_Server = intent.getBooleanExtra(Constants.EXTRA_IS_HOST, false);
+
         AppController.addHandler(this);
         PeerInfo info = PeerInfo.Retrieve(m_Id);
         info.Update(PeerInfo.Status.ACTIVE);
-        if(m_Server)
-        {
-            m_Initialized.set(true);
-            m_Tiles = getBoard();
-            AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT,
-                    25, m_Tiles));
-            startGame();
+
+        for(int j = 1; j<=m_Round; j++ ) {
+            m_ClientScoreView.setText("0");
+            m_HostScoreView.setText("0");
+            String tempText = j+"/"+m_Round+"Rounds";
+            m_textRound.setText(tempText);
+
+            if (m_Server) {
+                m_Initialized.set(true);
+                m_Tiles = getBoard();
+                AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT,
+                        25, m_Tiles));
+                startGame();
+                m_Timer.start();
+                m_Timer.setOnChronometerTickListener(this);
+
+            }
+            else if (m_Initialized.getAndSet(true))
+                startGame();
+            else
+                Log.i(TAG, "Game init, waiting on start");
+        }
+    }
+
+    public void onPauseClicked(View view) {
+
+        String pstring = m_Pause.getText().toString();
+        if (pstring.equals("Pause")) {
+            m_Pause.setText("Resume");
+            lastPause = SystemClock.elapsedRealtime();
+            m_Timer.stop();
+            m_Game.Pause();
+
+        } else {
+            m_Pause.setText("Pause");
+            m_Timer.setBase(m_Timer.getBase() + SystemClock.elapsedRealtime() - lastPause);
             m_Timer.start();
-            m_Timer.setOnChronometerTickListener(this);
+            m_Game.UnPause();
 
         }
-        else if(m_Initialized.getAndSet(true))
-            startGame();
-        else
-            Log.i(TAG, "Game init, waiting on start");
     }
 
     public void onChronometerTick(Chronometer var)
@@ -294,4 +332,5 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
     public int compareTo(@NonNull IPacketHandler o) {
         return Priority() - o.Priority();
     }
+
 }

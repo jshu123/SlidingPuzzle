@@ -17,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -37,7 +38,11 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
     private RadioButton m_Basic;
     private RadioButton m_Cut;
 
+    private EditText m_round;
+    private int round;
+
     private SharedPreferences m_Pref;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,6 +57,9 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
         m_DevList = findViewById(R.id.listView);
         m_DevList.setAdapter(m_Adapter);
         m_DevList.setEmptyView(findViewById(R.id.empty));
+
+        m_round = findViewById(R.id.roundNumber);
+        round = Integer.parseInt(m_round.getText().toString());
 
         SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
         if(pref.getString(PREF_LAST_ONLINE_MODE, "BASIC").equals("BASIC"))
@@ -90,6 +98,7 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
                 intent.putExtra(Constants.EXTRA_ID, i.Name);
                 intent.putExtra(Constants.EXTRA_DEVICE, i.Address);
                 intent.putExtra(Constants.EXTRA_IS_HOST, true);
+                intent.putExtra("ROUND", round);
                 startActivity(intent);
 
             }
