@@ -115,9 +115,6 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
   private final ValueAnimator m_ValAnim = ValueAnimator.ofFloat(0f,0f).setDuration(2000);
     protected void badToast(int msg)
     {
-   //     if(m_Toast.getView().isShown())
-        //    return;
-
 
         m_ValAnim.cancel();
         m_ValAnim.setCurrentFraction(0);

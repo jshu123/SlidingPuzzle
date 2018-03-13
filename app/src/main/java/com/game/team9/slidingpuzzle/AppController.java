@@ -91,18 +91,6 @@ public class AppController extends Application implements NetworkReceiver.IDataI
     }
 
 
-    public static void endGame(String id)
-    {
-        s_Instance._endGame(id);
-    }
-
-    private void _endGame(String id)
-    {
-     /*   NetworkHandler h = m_Listeners.remove(id);
-        if(h != null)
-            h.Terminate();*/
-    }
-
     public static void SendData(Packet data) {
         s_Instance._sendData(data);
     }
@@ -272,7 +260,7 @@ public class AppController extends Application implements NetworkReceiver.IDataI
     @Override
     public void onReceive(Packet p) {
 
-        m_Log[m_Index++] = p;
+        m_Log[(m_Index++) % 256] = p;
         switch (p.Type)
         {
             case FREE:

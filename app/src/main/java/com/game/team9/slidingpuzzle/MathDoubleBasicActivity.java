@@ -25,6 +25,12 @@ public class MathDoubleBasicActivity extends BaseMathOnlineActivity {
     }
 
     @Override
+    protected void onLocalGameEnded() {
+        m_Host.clear();
+    }
+
+
+    @Override
     public void onSwipeEvent(int[] idx) {
         if(validSwipe(idx))
         {

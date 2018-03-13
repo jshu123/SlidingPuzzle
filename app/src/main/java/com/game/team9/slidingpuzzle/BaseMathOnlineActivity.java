@@ -197,7 +197,7 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
                 return false;
             case QUIT:
                 p.Free();
-                onGameEnded(m_Id + " has ended the game.  ");
+                onGameEnded(m_Opponent.getName() + " has ended the game.  ");
                 return true;
             case MOVE:HandleMove(new Equation(p.Data, p.Length));
                 p.Free();
@@ -319,7 +319,6 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         super.onDestroy();
             AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.QUIT));
         AppController.removeHandler(this);
-        AppController.endGame(m_Id);
         if(m_Timer !=null)
             m_Timer.stop();
         PeerInfo info = PeerInfo.Retrieve(m_Id);
