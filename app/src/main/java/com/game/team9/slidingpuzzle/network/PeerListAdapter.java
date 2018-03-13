@@ -21,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -147,7 +146,7 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                 break;
             case INBOUND_REQUEST_CUT:
             case INBOUND_REQUEST_BAS:
-                String t = "They have invite you to play " + (byte)peer.Data + " rounds of " + (peer.Info == INBOUND_REQUEST_BAS ? "basic mode" : "cutthroat mode");
+                String t = "They have invite you to play " + peer.Data + " rounds of " + (peer.Info == INBOUND_REQUEST_BAS ? "basic mode" : "cutthroat mode");
                 text.setText(t);
                 decline.setVisibility(View.VISIBLE);
                 decline.setEnabled(true);
@@ -166,9 +165,13 @@ public class PeerListAdapter extends ArrayAdapter<PeerInfo> {
                     intent.putExtra(Constants.EXTRA_DEVICE, addr);
                     intent.putExtra(Constants.EXTRA_IS_HOST, false);
                        intent.putExtra(Constants.EXTRA_ROUNDS, (byte)peer.Data);
-                    AppController.SendData(Packet.AcquirePacket(addr, Packet.Header.ACCEPT));
-                    peer.Info = PeerInfo.Status.ACTIVE;
-                    notifyDataSetChanged();
+                       Packet pack = Packet.AcquirePacket(addr, Packet.Header.ACCEPT);
+                       pack.Data[1] = (byte)peer.Data;
+                       pack.Data[0] = (byte)(peer.Info == INBOUND_REQUEST_BAS ? 0 : 1);
+                       pack.Length = 2;
+                    AppController.SendData(pack);
+                    //peer.Info = PeerInfo.Status.ACTIVE;
+                    //notifyDataSetChanged();
                     m_Context.LaunchGame(intent);
                 });
                 Log.i(TAG, "Inbound, " + m_AcceptIcon + ", " + m_RejectIcon + ", " + peer);

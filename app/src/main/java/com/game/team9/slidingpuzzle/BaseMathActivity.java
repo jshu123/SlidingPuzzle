@@ -10,7 +10,6 @@
 package com.game.team9.slidingpuzzle;
 
 import android.animation.ArgbEvaluator;
-import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,18 +22,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AnimationUtils;
-import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-//import com.game.team9.slidingpuzzle.database.User;
 import com.game.team9.slidingpuzzle.database.User;
 import com.game.team9.slidingpuzzle.network.Constants;
 
 import java.util.Collections;
 import java.util.Random;
 import java.util.Stack;
+
+//import com.game.team9.slidingpuzzle.database.User;
 
 /**
  * Created on: 2/17/18
@@ -64,15 +63,6 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
 
     public static byte[] getBoard()
     {
-        if(AppController.DEBUG)
-        {
-            return new byte[]{1,11,1,13,2,
-                    2,12,1,13,1,
-                    5,11,4,13,9,
-                    4,11,5,13,9,
-                    2,12,1,13,-1
-            };
-        }
         byte tiles[]= new byte[25];
         Stack<Byte> stack = new Stack<>();
         Random r = new Random();
@@ -98,6 +88,14 @@ public abstract class BaseMathActivity extends AppCompatActivity implements Base
                 tiles[i] = stack.pop();
             else
                 tiles[i] = r.nextBoolean() ? num.pop() : stack.pop();
+        }
+        if(AppController.DEBUG)
+        {
+            tiles[0] = 1;
+            tiles[1] = 11;
+            tiles[2] = 2;
+            tiles[3] = 13;
+            tiles[4] = 3;
         }
         return tiles;
     }

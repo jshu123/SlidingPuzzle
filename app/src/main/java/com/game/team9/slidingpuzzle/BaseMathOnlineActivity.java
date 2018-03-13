@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.Chronometer;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
 import com.game.team9.slidingpuzzle.database.User;
@@ -42,44 +43,63 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
     protected TextView m_HostScoreView;
     protected TextView m_ClientScoreView;
     protected TextView m_RoundView;
+
+    protected TextView m_ClientRoundWonView;
+    protected TextView m_HostRoundWonView;
+    protected TextView m_ClientRoundView;
+    protected TextView m_HostRoundView;
+
     protected MathModeView m_Game;
     protected final User m_Opponent = new User();
 
     protected int m_HostScore;
     protected int m_ClientScore;
 
+    protected int m_HostWon;
+    protected int m_ClientWon;
+
     private byte[] m_Tiles;
     private ProgressBar m_Bar;
 
 
     private boolean m_Started = false;
-    private boolean m_Closed = false;
 
     private final AtomicBoolean m_Initialized = new AtomicBoolean(false);
-    private final AtomicBoolean m_Finalized = new AtomicBoolean(false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
 
+        m_HostWon = 0;
+        m_ClientWon = 0;
+
         m_Id = intent.getStringExtra(Constants.EXTRA_DEVICE);
         m_Opponent.setName(intent.getStringExtra(Constants.EXTRA_ID));
         setContentView(R.layout.activity_math_online);
         AppController.addHandler(this);
+
         m_Timer = findViewById(R.id.chronometer);
         m_HostScoreView = findViewById(R.id.hostScoreText);
         m_ClientScoreView = findViewById(R.id.clientScoreText);
         m_RoundView = findViewById(R.id.roundText);
-        m_ClientScoreView.setText("0");
-        m_HostScoreView.setText("0");
+
+        m_ClientRoundWonView = findViewById(R.id.cliRoundWonText);
+        m_HostRoundWonView = findViewById(R.id.hostRoundWonText);
+        m_ClientRoundView = findViewById(R.id.cliRoundNameText);
+        m_HostRoundView = findViewById(R.id.hostRoundNameText);
+
+        //m_ClientScoreView.setText("0");
+        //m_HostScoreView.setText("0");
         m_Rounds = intent.getByteExtra(Constants.EXTRA_ROUNDS, (byte)1);
         m_Current = 1;
         m_Bar = findViewById(R.id.progressBar);
         TextView t = findViewById(R.id.hostNameText);
         t.setText(m_User.getName());
+        m_HostRoundView.setText(m_User.getName());
         t = findViewById(R.id.clientNameText);
         t.setText(m_Opponent.getName());
+        m_ClientRoundView.setText(m_Opponent.getName());
         m_Game = findViewById(R.id.playerView);
         m_Server = intent.getBooleanExtra(Constants.EXTRA_IS_HOST, false);
         AppController.addHandler(this);
@@ -103,9 +123,11 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.INIT,
                 25, m_Tiles));
         startGame();
-        m_Timer.setBase(SystemClock.elapsedRealtime());
-        m_Timer.start();
-        m_Timer.setOnChronometerTickListener(this);
+        runOnUiThread(()->{
+            m_Timer.setBase(SystemClock.elapsedRealtime());
+            m_Timer.start();
+            m_Timer.setOnChronometerTickListener(this);
+        });
     }
 
     public void onChronometerTick(Chronometer var)
@@ -116,12 +138,20 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
 
     private synchronized void startGame()
     {
-        if(m_Initialized.getAndSet(true)) {
+        if(!m_Started && m_Initialized.getAndSet(true)) {
             m_Started = true;
-            m_Bar.setVisibility(View.GONE);
-            m_Game.Initialize(m_Tiles, this);
-            m_Game.setVisibility(View.VISIBLE);
-            m_RoundView.setText("Round " + m_Current + " of " + m_Rounds);
+            m_HostScore = 0;
+            m_ClientScore = 0;
+            runOnUiThread(()->{
+                m_Bar.setVisibility(View.GONE);
+                m_Game.Initialize(m_Tiles, this);
+                m_Game.setVisibility(View.VISIBLE);
+                m_ClientScoreView.setText("0");
+                m_HostScoreView.setText("0");
+                m_ClientRoundWonView.setText(String.valueOf(m_ClientWon));
+                m_HostRoundWonView.setText(String.valueOf(m_HostWon));
+                m_RoundView.setText("Round " + m_Current + " of " + m_Rounds);
+            });
         }
         else
             Log.i(TAG, "Game ready, waiting on init");
@@ -148,7 +178,8 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
                         Log.e(TAG, "Received invalid board size - " + p);
                     m_Tiles = new byte[p.Length];
                     System.arraycopy(p.Data,0,m_Tiles, 0, p.Length);
-                    runOnUiThread(this::startGame);
+                    startGame();
+                    //runOnUiThread(this::startGame);
 
                 }
                 p.Free();
@@ -165,7 +196,6 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
                 //p.Free();
                 return false;
             case QUIT:
-                m_Closed = true;
                 p.Free();
                 onGameEnded(m_Id + " has ended the game.  ");
                 return true;
@@ -197,28 +227,30 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
     public void onGiveupClicked(View view)
     {
         AppController.SendData(Packet.AcquirePacket(m_Id, Packet.Header.QUIT));
-        m_Closed=true;
         onGameEnded();
     }
 
 
-    protected void onGameEnded(String msg)
+    protected void onLocalGameEnded(){}
+
+    protected synchronized void onGameEnded(String msg)
     {
-      /*  if(!m_Finalized.compareAndSet(false, true))
-        {
-            Log.e(TAG, "Attempted to end the game twice");
-            finish();
-            return;
-        }*/
         m_Timer.stop();
-        m_Initialized.set(false);
+        m_Started = false;
         m_User.setScore(m_HostScore);
         m_Opponent.setScore(m_ClientScore);
 
+        onLocalGameEnded();
         if(m_HostScore > m_ClientScore)
+        {
             msg += "You are the winner!  ";
+            m_HostWon++;
+        }
         else if(m_ClientScore > m_HostScore)
+        {
             msg += m_Opponent.getName() + " is the winner.  ";
+            m_ClientWon++;
+        }
         else
             msg += "The game was a tie.  ";
         //Update opponent score in database first.
@@ -227,7 +259,7 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         HighScoreDatabase.updateUser(m_User);
         //top will not contain our score, so we can see if beat anyone.
 
-        if(m_Rounds == m_Current) {
+        if(m_Current++ == m_Rounds) {
             Intent intent = new Intent(BaseMathOnlineActivity.this, HighScoreActivity.class);
             for (User user : top) {
                 if (m_ClientScore > user.getScore()) {
@@ -254,14 +286,8 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         }
         else {
             final String rmsg = msg;
-            runOnUiThread(() -> {
-                AlertDialog alertDialog = new AlertDialog.Builder(BaseMathOnlineActivity.this).create();
-                alertDialog.setTitle("Game is over");
-                alertDialog.setMessage(rmsg);
-                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                        (dialog, which) -> dialog.dismiss());
-                alertDialog.show();
-            });
+            runOnUiThread(() -> Toast.makeText(this, rmsg, Toast.LENGTH_SHORT).show());
+            m_Game.ResetBoard();
         }
 
         if(m_Server)
@@ -270,8 +296,10 @@ public abstract class BaseMathOnlineActivity extends BaseMathActivity implements
         }
         else
         {
-            m_Game.setVisibility(View.GONE);
-            m_Bar.setVisibility(View.VISIBLE);
+            runOnUiThread(()->{
+                m_Game.setVisibility(View.GONE);
+                m_Bar.setVisibility(View.VISIBLE);
+            });
         }
     }
 

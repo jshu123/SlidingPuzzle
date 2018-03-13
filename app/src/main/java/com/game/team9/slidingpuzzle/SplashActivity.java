@@ -10,10 +10,11 @@
 package com.game.team9.slidingpuzzle;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ProgressBar;
 
 import com.felipecsl.gifimageview.library.GifImageView;
@@ -33,10 +34,10 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        gifImageView=(GifImageView)findViewById(R.id.gifImageView);
-        progressBar=(ProgressBar)findViewById(R.id.progressBar);
+        gifImageView= findViewById(R.id.gifImageView);
+        progressBar= findViewById(R.id.progressBar);
 
-        progressBar.setVisibility((progressBar.VISIBLE));
+        progressBar.setVisibility((View.VISIBLE));
 
         try{
             InputStream inputStream= getAssets().open("splashscreen.gif");
@@ -50,12 +51,9 @@ public class SplashActivity extends AppCompatActivity {
             Log.e("SplashActivity", "Error opening splash screen", ex);
         }
 
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                SplashActivity.this.startActivity(new Intent(SplashActivity.this, StartActivity.class));
-                SplashActivity.this.finish();
-            }
+        new Handler().postDelayed(() -> {
+            SplashActivity.this.startActivity(new Intent(SplashActivity.this, StartActivity.class));
+            SplashActivity.this.finish();
         },0);
     }
 }

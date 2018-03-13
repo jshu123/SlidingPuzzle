@@ -29,4 +29,7 @@ public interface IUserDao {
 
     @Query("SELECT COUNT(*) from users")
     int getTotal();
+
+    @Query("DELETE FROM users")
+    void clearAll();
 }

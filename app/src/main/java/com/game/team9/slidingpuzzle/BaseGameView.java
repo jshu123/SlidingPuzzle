@@ -1,6 +1,5 @@
 package com.game.team9.slidingpuzzle;
 
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -18,14 +17,12 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Handler;
 
 /**
  * Created on: 1/30/18
@@ -39,57 +36,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     private static final Paint m_TilePaint = new Paint();
     private static final Paint m_Grid= new Paint();
-    private final Paint m_TextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-    private final int[] m_Swipe = new int[5];
-    private int m_SwipeIndex = 0;
-
-    private final android.os.Handler m_Handler = new android.os.Handler();
-
-    private final List<IBoardChangeListener> m_Listeners = new ArrayList<>();
-    private final List<IGameStart> m_Starters = new ArrayList<>();
-    private final AtomicInteger m_Init = new AtomicInteger(0);
-    private final Object m_Lock = new Object();
-    private final byte[] m_Tiles = new byte[25];
-
-
-    private float m_TileWidth;
-    private float m_TileHeight;
-    private int m_Blank = -1;
-    private int m_LastBlank = -1;
-    private int m_LastIndex = -1;
-
-    private float m_StartX;
-    private float m_StartY;
-    private float m_CurX;
-    private float m_CurY;
-
-    private boolean m_Reverse;
-
-    private float m_Endx;
-    private float m_Endy;
-
-    private long m_TimeNow;
-    private long m_TimeStart;
-
-    private boolean m_LockedforCPU = false;
-    private boolean m_Paused = false;
-
-
-    private float m_XFontOffset;
-    private float m_YFontOffset;
-
-
-    private float m_LastClickx;//Debug use only
-    private float m_LastClicky;//Debug use only
-
-
-
-    private Bitmap m_TileMap;
-    private Bitmap m_TileSelect;
-    private final AtomicBoolean m_Animating = new AtomicBoolean(false);
-
-    private ISwipeHandler m_Swiper;
 
     static {
         m_TilePaint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -98,18 +44,52 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
         m_TilePaint.setStrokeJoin(Paint.Join.BEVEL);
     }
 
+    private final Paint m_TextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final int[] m_Swipe = new int[5];
+    private final android.os.Handler m_Handler = new android.os.Handler();
+
+    private final List<IBoardChangeListener> m_Listeners = new ArrayList<>();
+    private final List<IGameStart> m_Starters = new ArrayList<>();
+    private final AtomicInteger m_Init = new AtomicInteger(0);
+    private final Object m_Lock = new Object();
+    private final byte[] m_Tiles = new byte[25];
+    private final AtomicBoolean m_Animating = new AtomicBoolean(false);
+    private final AtomicBoolean m_TileInit = new AtomicBoolean(false);
+    private int m_SwipeIndex = 0;
+    private float m_TileWidth;
+    private float m_TileHeight;
+    private int m_Blank = -1;
+    private int m_LastBlank = -1;
+    private int m_LastIndex = -1;
+    private float m_StartX;
+    private float m_StartY;
+    private float m_CurX;
+    private float m_CurY;
+    private boolean m_Reverse;
+    private float m_Endx;
+    private float m_Endy;
+    private long m_TimeStart;
+    private boolean m_LockedforCPU = false;
+    private boolean m_Paused = false;
+    private float m_XFontOffset;
+    private float m_YFontOffset;
+    private float m_LastClickx;//Debug use only
+    private float m_LastClicky;//Debug use only
+    private Bitmap m_TileMap;
+    private Bitmap m_TileSelect;
+    private ISwipeHandler m_Swiper;
+    private boolean m_Started;
+
     protected BaseGameView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
-        //m_Activity = (Activity)context;
         Resources res = getResources();
-        m_TilePaint.setColor(res.getColor(R.color.colorTiles));
+        m_TilePaint.setColor(res.getColor(R.color.colorTiles, null));
         //m_BlankCol.setColor(res.getColor(R.color.colorBlank));
-        m_TextPaint.setColor(res.getColor(R.color.colorText));
+        m_TextPaint.setColor(res.getColor(R.color.colorText, null));
         m_TextPaint.setStyle(Paint.Style.FILL);
         m_TextPaint.setAntiAlias(true);
         m_TextPaint.setTypeface(Typeface.SANS_SERIF);
-        //m_TextPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         m_TilePaint.setMaskFilter(new EmbossMaskFilter(
                         new float[]{1,5,1}, // direction of the light source
                         0.5f, // ambient light between 0 to 1
@@ -123,7 +103,15 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
         ob.addOnGlobalLayoutListener(this);
     }
 
-
+    public static int findBlank(@NonNull byte[] array)
+    {
+        for(int i = 0; i < array.length; ++i)
+        {
+            if(array[i] == BLANK_VALUE)
+                return i;
+        }
+        return -1;
+    }
 
     /**
      * Must be called to initialize the board
@@ -134,13 +122,24 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
         Initialize(board,handler, false);
     }
 
-    private final AtomicBoolean m_TileInit = new AtomicBoolean(false);
-    private final AtomicBoolean m_TileFinished = new AtomicBoolean(false);
+    public boolean ResetBoard()
+    {
+        synchronized (m_Lock)
+        {
+            if(!m_Started)
+                return false;
+            m_Started = false;
+            m_TileInit.getAndSet(false);
+            m_Init.set(1);
+            return true;
+        }
+    }
 
     public void Initialize(@NonNull byte board[], ISwipeHandler handler, boolean ai)
     {
         if(m_TileInit.compareAndSet(false, true))
-        { synchronized (m_Lock) {
+        {
+            synchronized (m_Lock) {
                 m_Swiper = handler;
                 m_LockedforCPU = ai;
                 m_Blank = findBlank(board);
@@ -156,13 +155,22 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             Log.e(TAG, "Attempted to initalize twice");
     }
 
+    public synchronized void setGood(byte... b)
+    {
+
+    }
+
+    public synchronized void setBad(byte... b)
+    {
+
+    }
+
     /**
      * Used to convert the integer value in the game board to a text string.
      * @param value at a specific location on the board
      * @return a string representation of that value.  Values can be mapped to any string.
      */
     protected abstract String boardToText(int value);
-
 
     /**
      * Override this to get swipe events.
@@ -173,10 +181,12 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
     }
 
-
     public float getTileWidth(){return m_TileWidth;}
+
     public float getTileHeight(){return m_TileHeight;}
+
     public int getBlank(){return m_Blank;}
+
     public byte[] getTiles(){return m_Tiles.clone();}
 
     @Override
@@ -288,8 +298,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
                 }
 
                 m_Animating.set(true);
-                new android.os.Handler(Looper.getMainLooper()).post(()->invalidate());
-                //m_Thread.Resume();
+                new android.os.Handler(Looper.getMainLooper()).post(this::invalidate);
             }
             else
             {
@@ -304,7 +313,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             }
         }
     }
-
 
     private void Reset()
     {
@@ -322,7 +330,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
         return false;
     }
 
-
     @Override
     protected final void onDraw(@NonNull Canvas canvas) {
         if (m_Blank < 0) {
@@ -332,6 +339,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
 
         canvas.drawRect(0, 0, getWidth(), getHeight(), m_Grid);
         boolean a = m_Animating.get();
+        long timenow = System.currentTimeMillis();
         for (int i = 0; i < 25; ++i) {
             if(a && (i == m_Blank || i == m_LastBlank))
                 continue;
@@ -350,10 +358,10 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             }
         }
 
-        m_TimeNow =  System.currentTimeMillis();
+
         if(a)
         {
-            float frac = (float)curFrac();
+            float frac = (float)curFrac(m_TimeStart, timenow, 300, 1.1f);
             m_CurX = m_StartX + (( m_Endx - m_StartX) * frac);
             m_CurY = m_StartY + ((m_Endy - m_StartY) * frac);
 
@@ -377,19 +385,15 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             canvas.drawText(boardToText(m_Tiles[m_LastBlank]), m_CurX + m_XFontOffset, m_CurY + m_YFontOffset, m_TextPaint);
         }
 
-
-
-        if(AppController.DEBUG)
-       canvas.drawCircle(m_LastClickx, m_LastClicky, 10.0f, m_TextPaint);
         if(m_Animating.get())
             m_Handler.postDelayed(this::invalidate, 16);
     }
 
-    private double curFrac()
+    private double curFrac(long start, long now, int len, float max)
     {
-        long dt = m_TimeNow - m_TimeStart;
-        if(dt > 300)
-            return 1.1;
+        long dt = now - start;
+        if(dt > len)
+            return max;
        // return 1 + (Math.pow(2, (-10 * (dt / 250f))) * Math.sin(2 * Math.PI * ((dt / 250f) - 0.3/4)));
 
         return (Math.cos(((dt/250f) + 1f) * Math.PI) / 2.0f) + 0.5f;
@@ -465,6 +469,7 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
             st.OnStart();
         }
         m_Starters.clear();
+        m_Started = true;
     }
 
     private boolean canSlide(int idx)
@@ -488,17 +493,6 @@ public abstract class BaseGameView extends View implements ViewTreeObserver.OnGl
         int ix = (int)(x / m_TileWidth);
         int iy = (int)(y / m_TileHeight);
         return iy * 5 + ix;
-    }
-
-
-    public static int findBlank(@NonNull byte[] array)
-    {
-        for(int i = 0; i < array.length; ++i)
-        {
-            if(array[i] == BLANK_VALUE)
-                return i;
-        }
-        return -1;
     }
 
     public interface IBoardChangeListener {

@@ -9,7 +9,6 @@
 
 package com.game.team9.slidingpuzzle.network;
 
-import android.arch.persistence.room.Database;
 import android.util.Log;
 
 import java.io.IOException;
@@ -98,7 +97,7 @@ import java.util.concurrent.LinkedBlockingQueue;
             m_Pool.add(this);
         }
 
-        public static byte headerToByte(Header h)
+        private static byte headerToByte(Header h)
         {
             switch (h)
             {
@@ -115,7 +114,7 @@ import java.util.concurrent.LinkedBlockingQueue;
             }
         }
 
-        public static Header intToHeader(int c)
+        static Header intToHeader(int c)
         {
             switch(c)
             {
@@ -143,16 +142,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 
     @Override
     public String toString() {
-        String ret = Type.toString();
+        StringBuilder ret = new StringBuilder(Type.toString());
         if(Length > 0)
         {
-            ret += ":"+ Length + ":";
+            ret.append(":").append(Length).append(":");
             for(int i = 0; i < Length; ++i)
             {
-                ret += " " + Data[i];
+                ret.append(" ").append(Data[i]);
             }
         }
-        return ret;
+        return ret.toString();
     }
 }
 

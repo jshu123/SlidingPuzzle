@@ -29,19 +29,18 @@ import com.game.team9.slidingpuzzle.network.IPacketHandler;
 import com.game.team9.slidingpuzzle.network.Packet;
 import com.game.team9.slidingpuzzle.network.PeerInfo;
 import com.game.team9.slidingpuzzle.network.PeerListAdapter;
+
 import static com.game.team9.slidingpuzzle.network.Constants.PREF;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ONLINE_MODE;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ROUNDS;
 
 public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IPacketHandler, CompoundButton.OnCheckedChangeListener {
 
+    private final String BASIC = "BASIC";
     private PeerListAdapter m_Adapter;
-    private ListView m_DevList;
 
     private RadioButton m_Basic;
     private RadioButton m_Cut;
-
-    private EditText m_Rounds;
 
     private SharedPreferences m_Pref;
 
@@ -54,19 +53,19 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
         AppController.addHandler(this);
         m_Basic = findViewById(R.id.basicRadio);
         m_Cut = findViewById(R.id.cutRadio);
-        m_Rounds = findViewById(R.id.roundsRum);
-        m_DevList = findViewById(R.id.listView);
-        m_DevList.setAdapter(m_Adapter);
-        m_DevList.setEmptyView(findViewById(R.id.empty));
+        EditText rounds = findViewById(R.id.roundsRum);
+        ListView devlist = findViewById(R.id.listView);
+        devlist.setAdapter(m_Adapter);
+        devlist.setEmptyView(findViewById(R.id.empty));
 
         SharedPreferences pref = getSharedPreferences(PREF, MODE_PRIVATE);
-        if(pref.getString(PREF_LAST_ONLINE_MODE, "BASIC").equals("BASIC"))
+        if(pref.getString(PREF_LAST_ONLINE_MODE, BASIC).equals(BASIC))
             m_Basic.setChecked(true);
         else
             m_Cut.setChecked(true);
 
-        m_Rounds.setText(String.valueOf(pref.getInt(PREF_LAST_ROUNDS, 1)));
-        m_Rounds.setOnEditorActionListener((v, actionId, event)->{
+        rounds.setText(String.valueOf(pref.getInt(PREF_LAST_ROUNDS, 1)));
+        rounds.setOnEditorActionListener((v, actionId, event)->{
             if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                     actionId == EditorInfo.IME_ACTION_DONE ||
                     event != null &&
@@ -86,7 +85,8 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
 
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
     {
-        m_Pref.edit().putString(PREF_LAST_ONLINE_MODE, buttonView.equals(m_Basic) ? "BASIC" : "CUT").apply();
+        if(isChecked)
+            m_Pref.edit().putString(PREF_LAST_ONLINE_MODE, buttonView.equals(m_Basic) ? BASIC : "CUT").apply();
     }
 
 
@@ -105,12 +105,12 @@ public class MathOnlineDiscoveryActivity extends AppCompatActivity implements IP
         switch(p.Type) {
             case ACCEPT:
             {
-                Intent intent = new Intent(MathOnlineDiscoveryActivity.this, p.Data[0] == 1 ? MathDoubleBasicActivity.class : MathDoubleCuthroatActivity.class);
+                Intent intent = new Intent(MathOnlineDiscoveryActivity.this, p.Data[0] == 0 ? MathDoubleBasicActivity.class : MathDoubleCuthroatActivity.class);
                 PeerInfo i = PeerInfo.Retrieve(p.Source);
                 intent.putExtra(Constants.EXTRA_ID, i.Name);
                 intent.putExtra(Constants.EXTRA_DEVICE, i.Address);
                 intent.putExtra(Constants.EXTRA_IS_HOST, true);
-                intent.putExtra(Constants.EXTRA_ROUNDS, AppController.getRounds());
+                intent.putExtra(Constants.EXTRA_ROUNDS, p.Data[1]);
                 startActivity(intent);
 
             }

@@ -41,6 +41,15 @@
         android:text="@string/no_high_scores"/>
 
     <Button
+        android:id="@+id/clearButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:onClick="clear_OnClicked"
+        android:visibility="gone"
+        android:text="@string/clear_highscores" />
+
+    <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"

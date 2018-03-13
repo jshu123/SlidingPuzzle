@@ -12,8 +12,6 @@ package com.game.team9.slidingpuzzle.network;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.game.team9.slidingpuzzle.AppController;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;

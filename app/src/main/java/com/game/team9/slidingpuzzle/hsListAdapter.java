@@ -20,7 +20,6 @@ import android.widget.TextView;
 
 import com.game.team9.slidingpuzzle.database.User;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ import java.util.List;
 public class hsListAdapter extends ArrayAdapter<User> {
     private int mResource;
 
-    public hsListAdapter(@NonNull Context context, int resource, @NonNull List<User> objects) {
+    hsListAdapter(@NonNull Context context, int resource, @NonNull List<User> objects) {
         super(context, resource, objects);
         mResource = resource;
 
@@ -41,13 +40,14 @@ public class hsListAdapter extends ArrayAdapter<User> {
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         User highscore = getItem(position);
         View view = LayoutInflater.from(getContext()).inflate(mResource, parent, false);
-        TextView tvIndex = (TextView) view.findViewById(R.id.index);
-        TextView tvName = (TextView) view.findViewById(R.id.name);
-        TextView tvScore = (TextView)view.findViewById(R.id.score);
+        TextView tvIndex = view.findViewById(R.id.index);
+        TextView tvName = view.findViewById(R.id.name);
+        TextView tvScore = view.findViewById(R.id.score);
         tvIndex.setText(String.valueOf(position+1));
-        tvName.setText(highscore.getName());
-        tvScore.setText(String.valueOf(highscore.getScore()));
-
+        if(highscore != null) {
+            tvName.setText(highscore.getName());
+            tvScore.setText(String.valueOf(highscore.getScore()));
+        }
         return view;
     }
 

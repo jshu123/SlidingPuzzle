@@ -12,12 +12,10 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_MODE;
-import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_MODE;
 
 public class NumberModeActivity extends AppCompatActivity implements NumberModeView.IBoardSolvedListener {
 
     private NumberModeView m_Player;
-    private NumberModeView m_AI;
     private Button m_Pause;
     private NumberModeAI m_AI_Bot;
     private Chronometer m_Timer;
@@ -32,7 +30,7 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
 
         byte tiles[] = new byte[25];
 
-        //Create new puzzle with random numbers
+        //Create new puzzle with random numbers using Yates-Fisher shuffle: https://www.worldcat.org/oclc/14222135
         do {
             for (byte i = 0, swap = 0; i < 25; ++i) {
                 int rand = r.nextInt(swap + 1);
@@ -47,13 +45,13 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
         if(intent.getStringExtra(EXTRA_MODE).equals("AI"))
         {
             setContentView(R.layout.activity_number_aimode);
-            m_AI = findViewById(R.id.aiView);
-            m_AI_Bot = new NumberModeAI(m_AI);
-            m_AI.AttachStartListener(() -> Executors.defaultThreadFactory().newThread(m_AI_Bot).start());
-            m_AI.Initialize(tiles, indexes -> {
+            NumberModeView ai = findViewById(R.id.aiView);
+            m_AI_Bot = new NumberModeAI(ai);
+            ai.AttachStartListener(() -> Executors.defaultThreadFactory().newThread(m_AI_Bot).start());
+            ai.Initialize(tiles, indexes -> {
 
             }, true);
-            m_AI.AttachSolveListener(this);
+            ai.AttachSolveListener(this);
         }
         else
             setContentView(R.layout.activity_number_alone_mode);
@@ -65,50 +63,41 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
         m_Player.AttachSolveListener(this);
         m_Timer =findViewById(R.id.chronometer);
         m_Pause = findViewById(R.id.pauseButton);
-        m_Pause.setText("Pause");
+        m_Pause.setText(R.string.pause);
         m_Timer.start();
         m_Pause.setOnClickListener(v -> {
             String pstring = m_Pause.getText().toString();
             if(pstring.equals("Pause")){
-                m_Pause.setText("Resume");
+                m_Pause.setText(R.string.resume);
                 lastPause = SystemClock.elapsedRealtime();
                 m_Timer.stop();
                 m_Player.Pause();
                 if(m_AI_Bot != null)
                     m_AI_Bot.Pause();
-               // if(m_AI != null)
-                 //   m_AI.Pause();
 
             }
             else {
-                m_Pause.setText("Pause");
+                m_Pause.setText(R.string.pause);
                 m_Timer.setBase(m_Timer.getBase() + SystemClock.elapsedRealtime() - lastPause);
                 m_Timer.start();
                 m_Player.UnPause();
-                //if(m_AI != null)
-                //    m_AI.UnPause();
                 if(m_AI_Bot != null)
                     m_AI_Bot.UnPause();
             }
         });
     }
 
-
-        //badToast(R.string.invalid_eq);
-
     @Override
     public void Solved(int id) {
 
-       // if(m_AI != null)
-         //   m_AI.Stop();
         String msg = id == m_Player.getId() ? "You win!" : "You lose.";
         AlertDialog alertDialog = new AlertDialog.Builder(NumberModeActivity.this).create();
-        alertDialog.setTitle("Game over");
+        alertDialog.setTitle(getString(R.string.game_over));
         alertDialog.setMessage(msg);
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
                 (dialog, which) -> {
                     dialog.dismiss();
-                    complete();
+                    finish();
                 });
         alertDialog.show();
     }
@@ -122,10 +111,6 @@ public class NumberModeActivity extends AppCompatActivity implements NumberModeV
             m_Timer.stop();
     }
 
-    private void complete()
-    {
-        finish();
-    }
     private static boolean isSolvable(byte[] tiles)
     {
         int parity = 0;

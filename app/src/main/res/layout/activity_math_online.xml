@@ -124,18 +124,17 @@
     <Button
         android:id="@+id/giveupButton"
         android:layout_width="wrap_content"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:background="@android:color/holo_red_light"
         android:onClick="onGiveupClicked"
         android:text="@string/give_up"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/highscoreButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/playerView" />
+        app:layout_constraintTop_toTopOf="@+id/highscoreButton" />
 
     <Button
         android:id="@+id/highscoreButton"
@@ -154,14 +153,13 @@
     <view
         android:id="@+id/playerView"
         class="com.game.team9.slidingpuzzle.MathModeView"
-        android:layout_width="314dp"
-        android:layout_height="314dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@+id/giveupButton"
+        app:layout_constraintBottom_toTopOf="@+id/roundText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
@@ -175,7 +173,8 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/giveupButton"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -187,11 +186,56 @@
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/hostRoundWonText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/cliRoundNameText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/giveupButton"
+        app:layout_constraintEnd_toEndOf="@+id/giveupButton"
+        app:layout_constraintStart_toStartOf="@+id/giveupButton" />
+
+    <TextView
+        android:id="@+id/hostRoundNameText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/cliRoundNameText"
+        app:layout_constraintEnd_toEndOf="@+id/giveupButton"
+        app:layout_constraintStart_toStartOf="@+id/giveupButton"
+        app:layout_constraintTop_toTopOf="@+id/hostRoundWonText" />
+
+    <TextView
+        android:id="@+id/hostRoundWonText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/cliRoundWonText"
+        app:layout_constraintEnd_toEndOf="@+id/highscoreButton"
+        app:layout_constraintStart_toStartOf="@+id/highscoreButton" />
+
+    <TextView
+        android:id="@+id/cliRoundWonText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         app:layout_constraintBottom_toTopOf="@+id/highscoreButton"
         app:layout_constraintEnd_toEndOf="@+id/highscoreButton"
         app:layout_constraintStart_toStartOf="@+id/highscoreButton"
-        app:layout_constraintTop_toBottomOf="@+id/playerView" />
+        app:layout_constraintTop_toTopOf="@+id/cliRoundNameText" />
 
 
 </android.support.constraint.ConstraintLayout>

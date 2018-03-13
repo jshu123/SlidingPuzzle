@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Stack;
-import java.util.concurrent.Callable;
 
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_NEW_PEER;
 import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_DEVICE;
@@ -198,7 +197,7 @@ public class PeerInfo implements Serializable, View.OnClickListener {
 
     @Override
     public String toString() {
-        return Name + "@" + Address + ": " + Info + "(" + Message + ")";
+        return Name + "@" + Address + ": " + Info + "(" + Message + "), Icon: " + Icon;
     }
 
     public void Restore(PeerState info)

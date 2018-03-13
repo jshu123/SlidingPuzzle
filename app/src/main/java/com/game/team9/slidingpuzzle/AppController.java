@@ -10,22 +10,11 @@
 package com.game.team9.slidingpuzzle;
 
 import android.app.Application;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.util.Pair;
-import android.view.View;
-import android.widget.Toast;
 
 import com.game.team9.slidingpuzzle.network.ConListener;
-import com.game.team9.slidingpuzzle.network.Constants;
 import com.game.team9.slidingpuzzle.network.IPacketHandler;
 import com.game.team9.slidingpuzzle.network.NetworkHandler;
 import com.game.team9.slidingpuzzle.network.NetworkReceiver;
@@ -40,10 +29,8 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.UUID;
 
 import static com.game.team9.slidingpuzzle.network.Constants.PREF;
-import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_MODE;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ONLINE_MODE;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_LAST_ROUNDS;
 
@@ -301,8 +288,6 @@ public class AppController extends Application implements NetworkReceiver.IDataI
                 return;
 
             case QUIT:
-                PeerInfo peer = PeerInfo.Retrieve(p.Source);
-                peer.Update(PeerInfo.Status.AVAILABLE);
                 break;
             case MOVE:
                 break;
@@ -334,7 +319,11 @@ public class AppController extends Application implements NetworkReceiver.IDataI
         {
             Log.w(TAG, "No game handler, ignoring packet: " + p);
             if(p.Type == Packet.Header.QUIT)
+            {
+                PeerInfo i = PeerInfo.Retrieve(p.Source);
+                i.Update(PeerInfo.Status.AVAILABLE);
                 ++m_LastHandled;
+            }
         }
     }
 }

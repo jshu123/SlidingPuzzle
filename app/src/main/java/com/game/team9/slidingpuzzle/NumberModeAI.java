@@ -37,24 +37,18 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
     @NonNull
     private ThreadStatus m_Status = ThreadStatus.NA;
 
-    private final Thread m_SearchThread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            Thread.currentThread().setName("AI Searcher");
-            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            SearchThread();
-        }
+    private final Thread m_SearchThread = new Thread(() -> {
+        Thread.currentThread().setName("AI Searcher");
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        SearchThread();
     });
-    private final Thread m_MoveThread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            Thread.currentThread().setName("AI Mover");
-            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            if(m_BoringAI)
-                BoringAIThread();
-            else
-                MoveThread();
-        }
+    private final Thread m_MoveThread = new Thread(() -> {
+        Thread.currentThread().setName("AI Mover");
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        if(m_BoringAI)
+            BoringAIThread();
+        else
+            MoveThread();
     });
 
     private static int m_Total = 0;
@@ -315,12 +309,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
 
         if(AppController.DEBUG)
             Log.i("AI Thread Started", "ID: " + android.os.Process.myTid());
-        TreeSet<state> tree = new TreeSet<>(new Comparator<state>() {
-            @Override
-            public int compare(@NonNull state s, @NonNull state t1) {
-                return s.getFitness() - t1.getFitness();
-            }
-        });
+        TreeSet<state> tree = new TreeSet<>((s, t1) -> s.getFitness() - t1.getFitness());
 
         state best = new state(m_Game.getTiles());
         m_Total += 1 + best.FindSuccessor();
@@ -378,12 +367,7 @@ public class NumberModeAI implements BaseGameView.IBoardChangeListener, IBoardSo
         private boolean m_Opened = false;
         private boolean m_Closed  = false;
 
-        public final TreeSet<state> Successors = new TreeSet<>(new Comparator<state>() {
-            @Override
-            public int compare(@NonNull state s, @NonNull state t1) {
-                return s.getFitness() - t1.getFitness();
-            }
-        });
+        public final TreeSet<state> Successors = new TreeSet<>((s, t1) -> s.getFitness() - t1.getFitness());
 
         public state(@NonNull byte e[])
         {

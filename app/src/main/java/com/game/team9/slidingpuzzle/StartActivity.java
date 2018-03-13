@@ -12,8 +12,8 @@ package com.game.team9.slidingpuzzle;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -40,6 +40,7 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
 
     private static final String TAG = "Tile_START";
     private static final String DEFAULT_NAME = "Player";
+    private static final String SINGLE = "SINGLE";
     private static final Object m_Lock = new Object();
     private static boolean m_Registered;
 
@@ -118,20 +119,20 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
 
         String mode;
         try{
-            mode = pref.getString(PREF_LAST_MODE, "SINGLE");
+            mode = pref.getString(PREF_LAST_MODE, SINGLE);
         }
         catch(ClassCastException e)
         {
             SharedPreferences.Editor edit = pref.edit();
             edit.clear();
             edit.apply();
-            mode = "SINGLE";
+            mode = SINGLE;
         }
 
         if(game.equals("MATH"))
         {
             m_MathMode.setChecked(true);
-            if(mode.equals("SINGLE"))
+            if(mode.equals(SINGLE))
                 m_MathSingle.setChecked(true);
             else
                 m_MathDouble.setChecked(true);
@@ -139,7 +140,7 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
         else
         {
             m_NumberMode.setChecked(true);
-            if(mode.equals("SINGLE"))
+            if(mode.equals(SINGLE))
                 m_NumSingle.setChecked(true);
             else
                 m_NumAI.setChecked(true);
@@ -155,7 +156,7 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
                             event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                 if (event == null || !event.isShiftPressed()) {
                     // the user is done typing.
-                    sendBroadcast(new Intent(ACTION_NAME_CHANGE).putExtra(EXTRA_ID, ((TextView)v).getText().toString()));
+                    sendBroadcast(new Intent(ACTION_NAME_CHANGE).putExtra(EXTRA_ID, v.getText().toString()));
                 }
             }
             return false;
@@ -205,7 +206,7 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
             pref.putString(PREF_LAST_GAME, "MATH");
             if(m_MathSingle.isChecked())
             {
-                pref.putString(PREF_LAST_MODE, "SINGLE");
+                pref.putString(PREF_LAST_MODE,SINGLE);
                 intent = new Intent(StartActivity.this, MathSinglePlayerActivity.class);
             }
             else
@@ -220,8 +221,8 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
             intent = new Intent(StartActivity.this, NumberModeActivity.class);
             if(m_NumSingle.isChecked())
             {
-                pref.putString(PREF_LAST_MODE, "SINGLE");
-                intent.putExtra(EXTRA_MODE, "SINGLE" );
+                pref.putString(PREF_LAST_MODE, SINGLE);
+                intent.putExtra(EXTRA_MODE, SINGLE);
             }
             else
             {
@@ -240,7 +241,7 @@ public class StartActivity extends AppCompatActivity implements RadioGroup.OnChe
             if(m_Registered) {
                 stopService(new Intent(this, MathNSDService.class));
                 HighScoreDatabase.DestroyInstance();
-                Log.i("Main", "Killing database");
+                Log.i(TAG, "Killing database");
                 m_Registered = false;
             }
         }

@@ -66,4 +66,11 @@ public abstract class HighScoreDatabase extends RoomDatabase {
         }
     }
 
+    public static void clearAll()
+    {
+        if(s_Instance != null)
+        {
+            s_Instance.userDao().clearAll();
+        }
+    }
 }

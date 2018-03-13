@@ -10,7 +10,6 @@
 package com.game.team9.slidingpuzzle.network;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -19,7 +18,6 @@ import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.game.team9.slidingpuzzle.AppController;
@@ -29,7 +27,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.game.team9.slidingpuzzle.network.Constants.ACTION_NAME_CHANGE;
-import static com.game.team9.slidingpuzzle.network.Constants.EXTRA_ID;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF;
 import static com.game.team9.slidingpuzzle.network.Constants.PREF_USER;
 
@@ -66,12 +63,8 @@ public class MathNSDService extends Service {
         }
     };
 
-    private final IntentFilter m_Filter;
-
     public MathNSDService() {
         m_UniqueName = SERVICE_NAME + String.valueOf(new Random().nextInt(100));
-        m_Filter = new IntentFilter();
-        m_Filter.addAction(ACTION_NAME_CHANGE);
     }
     @Override
     public void onCreate() {
@@ -172,7 +165,7 @@ public class MathNSDService extends Service {
 
             @Override
             public void onServiceLost(NsdServiceInfo serviceInfo) {
-                Log.i(TAG, "Lost service: " + serviceInfo.getServiceName() + " @ "+ serviceInfo.getServiceType());
+                Log.i(TAG, "Lost service: " + serviceInfo);
                 if(serviceInfo.getServiceType().startsWith(SERVICE_TYPE) && !serviceInfo.getServiceName().equals(m_Name)) {
                     InetAddress addr = serviceInfo.getHost();
                     if (addr != null)

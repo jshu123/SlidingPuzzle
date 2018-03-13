@@ -3,7 +3,6 @@ package com.game.team9.slidingpuzzle;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.graphics.Color;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -91,12 +90,10 @@ public class MathSinglePlayerActivity extends BaseMathActivity {
         alertDialog.setTitle("New highscore");
         alertDialog.setMessage(msg);
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(@NonNull DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        startActivity(intent);
-                        finish();
-                    }
+                (dialog, which) -> {
+                    dialog.dismiss();
+                    startActivity(intent);
+                    finish();
                 });
         alertDialog.show();
     }

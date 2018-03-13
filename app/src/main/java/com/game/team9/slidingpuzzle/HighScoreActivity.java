@@ -19,22 +19,28 @@ import android.widget.Toast;
 import com.game.team9.slidingpuzzle.database.HighScoreDatabase;
 import com.game.team9.slidingpuzzle.database.User;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 
 public class HighScoreActivity extends AppCompatActivity {
 
+    private hsListAdapter m_Adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_high_score);
         ListView hsView = findViewById(R.id.listView);
-        List<User> list = HighScoreDatabase.getTop();
-        Collections.reverse(list);
-        hsListAdapter adapter = new hsListAdapter(this, R.layout.high_score_adapter, list);
-        hsView.setAdapter(adapter);
+        m_Adapter = new hsListAdapter(this, R.layout.high_score_adapter, new ArrayList<User>());
+        hsView.setAdapter(m_Adapter);
         hsView.setEmptyView(findViewById(R.id.emptyView));
+        resetAdapter();
+        if(hsView.getCount() > 0)
+        {
+            findViewById(R.id.clearButton).setVisibility(View.VISIBLE);
+        }
 
         Intent intent = getIntent();
         if(intent.getBooleanExtra("NewScore", false))
@@ -44,8 +50,22 @@ public class HighScoreActivity extends AppCompatActivity {
 
     }
 
+    private void resetAdapter()
+    {
+        List<User> list = HighScoreDatabase.getTop();
+        Collections.reverse(list);
+        m_Adapter.addAll(list);
+    }
+
     public void ok_OnClicked(View view)
     {
         finish();
+    }
+
+    public void clear_OnClicked(View view)
+    {
+        HighScoreDatabase.clearAll();
+        m_Adapter.clear();
+        resetAdapter();
     }
 }
